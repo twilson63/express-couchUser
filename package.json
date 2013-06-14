@@ -1,6 +1,6 @@
 {
   "name": "express-user-couchdb",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An express app module connected to couchdb _users table",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,8 @@
     "express": "~3.2.6",
     "nano": "~3.3.8",
     "uuid": "~1.4.1",
-    "nodemailer": "~0.4.4"
+    "nodemailer": "~0.4.4",
+    "email-templates": "~0.1.0"
   },
   "readmeFilename": "readme.md",
   "dist": {
