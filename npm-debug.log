@@ -1,0 +1,153 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'publish' ]
+2 info using npm@1.2.18
+3 info using node@v0.10.4
+4 verbose publish [ '.' ]
+5 verbose read json /Users/twilson63/play/express-couchUser/package.json
+6 verbose cache add [ '.', null ]
+7 verbose cache add name=undefined spec="." args=[".",null]
+8 verbose parsed url { protocol: null,
+8 verbose parsed url   slashes: null,
+8 verbose parsed url   auth: null,
+8 verbose parsed url   host: null,
+8 verbose parsed url   port: null,
+8 verbose parsed url   hostname: null,
+8 verbose parsed url   hash: null,
+8 verbose parsed url   search: null,
+8 verbose parsed url   query: null,
+8 verbose parsed url   pathname: '.',
+8 verbose parsed url   path: '.',
+8 verbose parsed url   href: '.' }
+9 silly lockFile 3a52ce78- .
+10 verbose lock . /Users/twilson63/.npm/3a52ce78-.lock
+11 verbose read json package.json
+12 verbose tar pack [ '/var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz',
+12 verbose tar pack   '.' ]
+13 verbose tarball /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz
+14 verbose folder .
+15 info prepublish express-couchUser@0.0.1
+16 silly lockFile 3a52ce78- .
+17 verbose lock . /Users/twilson63/.npm/3a52ce78-.lock
+18 silly lockFile 3dd13800-30514-0-9381593216676265-tmp-tgz /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz
+19 verbose lock /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz /Users/twilson63/.npm/3dd13800-30514-0-9381593216676265-tmp-tgz.lock
+20 silly lockFile 3a52ce78- .
+21 silly lockFile 3a52ce78- .
+22 silly lockFile 3dd13800-30514-0-9381593216676265-tmp-tgz /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz
+23 silly lockFile 3dd13800-30514-0-9381593216676265-tmp-tgz /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz
+24 verbose tar unpack /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz
+25 silly lockFile b043d28e-30514-0-9381593216676265-package /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package
+26 verbose lock /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package /Users/twilson63/.npm/b043d28e-30514-0-9381593216676265-package.lock
+27 silly lockFile 3dd13800-30514-0-9381593216676265-tmp-tgz /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz
+28 verbose lock /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz /Users/twilson63/.npm/3dd13800-30514-0-9381593216676265-tmp-tgz.lock
+29 silly gunzTarPerm modes [ '755', '644' ]
+30 silly gunzTarPerm extractEntry package.json
+31 silly gunzTarPerm extractEntry .npmignore
+32 silly gunzTarPerm extractEntry index.js
+33 silly gunzTarPerm extractEntry lib/user.js
+34 silly gunzTarPerm extractEntry readme.md
+35 silly gunzTarPerm extractEntry test/index.js
+36 silly gunzTarPerm extractEntry test/emailTpls/forgot/style.css
+37 silly gunzTarPerm extractEntry test/emailTpls/forgot/text.ejs
+38 verbose read json /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package/package.json
+39 silly lockFile b043d28e-30514-0-9381593216676265-package /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package
+40 silly lockFile b043d28e-30514-0-9381593216676265-package /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package
+41 silly lockFile 3dd13800-30514-0-9381593216676265-tmp-tgz /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz
+42 silly lockFile 3dd13800-30514-0-9381593216676265-tmp-tgz /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/tmp.tgz
+43 verbose from cache /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package/package.json
+44 verbose tar pack [ '/Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz',
+44 verbose tar pack   '/var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package' ]
+45 verbose tarball /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+46 verbose folder /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package
+47 silly lockFile b043d28e-30514-0-9381593216676265-package /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package
+48 verbose lock /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package /Users/twilson63/.npm/b043d28e-30514-0-9381593216676265-package.lock
+49 silly lockFile a00eff5e-ress-couchUser-0-0-1-package-tgz /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+50 verbose lock /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz /Users/twilson63/.npm/a00eff5e-ress-couchUser-0-0-1-package-tgz.lock
+51 silly lockFile b043d28e-30514-0-9381593216676265-package /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package
+52 silly lockFile b043d28e-30514-0-9381593216676265-package /var/folders/hj/wpw1cnk941x6p_6ww5tn42y00000gn/T/npm-86507/1371211130514-0.9381593216676265/package
+53 silly lockFile a00eff5e-ress-couchUser-0-0-1-package-tgz /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+54 silly lockFile a00eff5e-ress-couchUser-0-0-1-package-tgz /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+55 silly lockFile 56d17fb1--express-couchUser-0-0-1-package /Users/twilson63/.npm/express-couchUser/0.0.1/package
+56 verbose lock /Users/twilson63/.npm/express-couchUser/0.0.1/package /Users/twilson63/.npm/56d17fb1--express-couchUser-0-0-1-package.lock
+57 silly lockFile 56d17fb1--express-couchUser-0-0-1-package /Users/twilson63/.npm/express-couchUser/0.0.1/package
+58 silly lockFile 56d17fb1--express-couchUser-0-0-1-package /Users/twilson63/.npm/express-couchUser/0.0.1/package
+59 verbose tar unpack /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+60 silly lockFile 56d17fb1--express-couchUser-0-0-1-package /Users/twilson63/.npm/express-couchUser/0.0.1/package
+61 verbose lock /Users/twilson63/.npm/express-couchUser/0.0.1/package /Users/twilson63/.npm/56d17fb1--express-couchUser-0-0-1-package.lock
+62 silly lockFile a00eff5e-ress-couchUser-0-0-1-package-tgz /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+63 verbose lock /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz /Users/twilson63/.npm/a00eff5e-ress-couchUser-0-0-1-package-tgz.lock
+64 silly gunzTarPerm modes [ '755', '644' ]
+65 silly gunzTarPerm extractEntry package.json
+66 silly gunzTarPerm extractEntry .npmignore
+67 silly gunzTarPerm extractEntry index.js
+68 silly gunzTarPerm extractEntry lib/user.js
+69 silly gunzTarPerm extractEntry readme.md
+70 silly gunzTarPerm extractEntry test/index.js
+71 silly gunzTarPerm extractEntry test/emailTpls/forgot/style.css
+72 silly gunzTarPerm extractEntry test/emailTpls/forgot/text.ejs
+73 verbose read json /Users/twilson63/.npm/express-couchUser/0.0.1/package/package.json
+74 silly lockFile 56d17fb1--express-couchUser-0-0-1-package /Users/twilson63/.npm/express-couchUser/0.0.1/package
+75 silly lockFile 56d17fb1--express-couchUser-0-0-1-package /Users/twilson63/.npm/express-couchUser/0.0.1/package
+76 silly lockFile a00eff5e-ress-couchUser-0-0-1-package-tgz /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+77 silly lockFile a00eff5e-ress-couchUser-0-0-1-package-tgz /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+78 silly shasum updated bytes 3206
+79 info shasum 9231b4c15df6dddf2b583f4cd2437445b67b23a7
+79 info shasum /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz
+80 verbose from cache /Users/twilson63/.npm/express-couchUser/0.0.1/package/package.json
+81 verbose chmod /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz 644
+82 verbose chown /Users/twilson63/.npm/express-couchUser/0.0.1/package.tgz [ 501, 20 ]
+83 silly lockFile 3a52ce78- .
+84 silly publish { name: 'express-couchUser',
+84 silly publish   version: '0.0.1',
+84 silly publish   description: 'An express app module connected to couchdb _users table',
+84 silly publish   main: 'index.js',
+84 silly publish   scripts: { test: 'echo "Error: no test specified" && exit 1' },
+84 silly publish   repository:
+84 silly publish    { type: 'git',
+84 silly publish      url: 'https://github.com/twilson63/express-couchUser.git' },
+84 silly publish   keywords: [ 'couchdb', 'express', 'module', '_users', 'authentication' ],
+84 silly publish   author: { name: 'Tom' },
+84 silly publish   license: 'MIT',
+84 silly publish   dependencies:
+84 silly publish    { express: '~3.2.6',
+84 silly publish      nano: '~3.3.8',
+84 silly publish      uuid: '~1.4.1',
+84 silly publish      nodemailer: '~0.4.4' },
+84 silly publish   readmeFilename: 'readme.md',
+84 silly publish   dist: { shasum: '9231b4c15df6dddf2b583f4cd2437445b67b23a7' },
+84 silly publish   _resolved: 'git://github.com/twilson63/express-couchUser.git#2ccd791c6c62a849ee19e88e8a1920e74130f35e',
+84 silly publish   _from: '.',
+84 silly publish   gitHead: 'a79356c886a52270c10aaffed86c3b35cdb5f6c2',
+84 silly publish   directories: { test: 'test' },
+84 silly publish   devDependencies: {},
+84 silly publish   readme: '# CDU - CouchDbUsers Module\n\nThis module is a simple authentication api built on top of couch\'s user model.\n\n## requirements\n\n* couchdb\n* nodejs\n\n## init example\n\n``` js\nvar couchUser = require(\'express-couchUser\');\nvar express = require(\'express\');\nvar app = express();\n\napp.configure(function() {\n  app.use(couchUser(config));\n});\n\n```\n\n## API Commands\n\n* signUp(name, password, data, email?, callback);\n* signIn(name, password, callback);\n* signOut(name, callback);\n* forgot(email, htmlTemplate, textTemplate, callback);\n---\n* verify(name, code, callback);\n* reset(name, code, callback);\n* getUser(name, callback);\n* setUser(name, data, callback);\n* rmUser(name, callback);\n\n## Events\n\n* registered\n* loggedIn\n* loggedOut\n* forgotPassword\n* resetPassword\n* getUser\n* setUser\n* rmUser\n\n## setup\n\n## usage example\n\n## what is htmlTemplate and textTemplate\n\n## how to setup email options\n\n',
+84 silly publish   _id: 'express-couchUser@0.0.1' }
+85 verbose url raw express-couchUser
+86 verbose url resolving [ 'https://registry.npmjs.org/', './express-couchUser' ]
+87 verbose url resolved https://registry.npmjs.org/express-couchUser
+88 info trying registry request attempt 1 at 07:59:02
+89 http PUT https://registry.npmjs.org/express-couchUser
+90 http 403 https://registry.npmjs.org/express-couchUser
+91 info trying registry request attempt 1 at 07:59:03
+92 http PUT https://registry.npmjs.org/express-couchUser
+93 http 403 https://registry.npmjs.org/express-couchUser
+94 error publish Failed PUT response 403
+95 error Error: forbidden New packages must have all-lowercase names: express-couchUser
+95 error     at RegClient.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:269:14)
+95 error     at Request.self.callback (/usr/local/lib/node_modules/npm/node_modules/request/index.js:142:22)
+95 error     at Request.EventEmitter.emit (events.js:98:17)
+95 error     at Request.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/index.js:856:14)
+95 error     at Request.EventEmitter.emit (events.js:117:20)
+95 error     at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/index.js:808:12)
+95 error     at IncomingMessage.EventEmitter.emit (events.js:117:20)
+95 error     at _stream_readable.js:883:14
+95 error     at process._tickCallback (node.js:415:13)
+96 error If you need help, you may report this log at:
+96 error     <http://github.com/isaacs/npm/issues>
+96 error or email it to:
+96 error     <npm-@googlegroups.com>
+97 error System Darwin 12.2.0
+98 error command "node" "/usr/local/bin/npm" "publish"
+99 error cwd /Users/twilson63/play/express-couchUser
+100 error node -v v0.10.4
+101 error npm -v 1.2.18
+102 verbose exit [ 1, true ]
