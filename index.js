@@ -18,11 +18,11 @@ module.exports = function(config) {
   // add/update view
   db.get('_design/user', function(err, body) {
     if (err && err.error === 'not_found') {
-      return db.insert(userView, '_design/user').pipe('added user view:' + process.stdout); 
+      return db.insert(userView, '_design/user').pipe(process.stdout); 
     }
     if (body.version !== userView.version) {
       userView._rev = body._rev;
-      db.insert(userView, '_design/user').pipe('updated user view: ' + process.stdout);
+      db.insert(userView, '_design/user').pipe(process.stdout);
     }
   });
   // ## register user
@@ -42,7 +42,7 @@ module.exports = function(config) {
     function done(err, body) {
       if (err) { return res.send(500, err); }
       res.send(body);
-      app.emit('user:signed-up', body);
+      //app.emit('user:signed-up', body);
     }
   });
 
@@ -52,7 +52,7 @@ module.exports = function(config) {
 
   // * name
   // * password
-  app.post('/api/signin', function(req, res) {
+  app.post('/api/user/signin', function(req, res) {
     couch.auth(req.body.name, req.body.password, genSession);
 
     function genSession(err, body, headers) {
@@ -61,7 +61,7 @@ module.exports = function(config) {
         req.session.user = req.body.name;
         res.writeHead(200, { 'set-cookie': headers['set-cookie']});
         res.end(JSON.stringify(body));
-        app.emit('user:signed-in', body);
+        //app.emit('user:signed-in', body);
       });
     }
   });
@@ -71,7 +71,8 @@ module.exports = function(config) {
   // required properties on req.body
 
   // * name
-  app.post('/api/signout', function(req, res) {
+  app.post('/api/user/signout', function(req, res) {
+    req.session.destroy();
     res.clearCookie('AuthSession');
     res.send({ok: true});
     //app.emit('user:signed-out', body);
@@ -106,7 +107,7 @@ module.exports = function(config) {
     // render forgot.ejs
     function renderForgotTemplate(err, template) {
       if (err) { return res.send(500, err); }
-      template('forgot', { user: user }, sendEmail);
+      template('forgot', { user: user, app: config.app }, sendEmail);
     }
 
     // send rendered template to user
@@ -124,7 +125,7 @@ module.exports = function(config) {
     function done(err, status) {
       if (err) { return res.send(500, err); }
       res.send({ ok: true });
-      app.emit('user: forgot password', user);
+      //app.emit('user: forgot password', user);
     }
   });
 
@@ -137,6 +138,7 @@ module.exports = function(config) {
         return res.send(500, {message: 'Not Found'});
       }
       var user = body.rows[0].value;
+      user.password = req.body.password;
       // clear code
       user.code = '';
       db.insert(user, user._id).pipe(res);

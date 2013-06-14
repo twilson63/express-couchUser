@@ -14,12 +14,22 @@
     "_users",
     "authentication"
   ],
-  "author": "Tom",
+  "author": {
+    "name": "Tom"
+  },
   "license": "MIT",
   "dependencies": {
     "express": "~3.2.6",
     "nano": "~3.3.8",
     "uuid": "~1.4.1",
     "nodemailer": "~0.4.4"
-  }
+  },
+  "readme": "# CDU - CouchDbUsers Module\n\nThis module is a simple authentication api built on top of couch's user model.\n\n## requirements\n\n* couchdb\n* nodejs\n\n## init example\n\n``` js\nvar couchUser = require('express-couchUser');\nvar express = require('express');\nvar app = express();\n\napp.configure(function() {\n  app.use(couchUser(config));\n});\n\n```\n\n## API Commands\n\n* signUp(name, password, data, email?, callback);\n* signIn(name, password, callback);\n* signOut(name, callback);\n* forgot(email, htmlTemplate, textTemplate, callback);\n---\n* verify(name, code, callback);\n* reset(name, code, callback);\n* getUser(name, callback);\n* setUser(name, data, callback);\n* rmUser(name, callback);\n\n## Events\n\n* registered\n* loggedIn\n* loggedOut\n* forgotPassword\n* resetPassword\n* getUser\n* setUser\n* rmUser\n\n## setup\n\n## usage example\n\n## what is htmlTemplate and textTemplate\n\n## how to setup email options\n\n",
+  "readmeFilename": "readme.md",
+  "_id": "express-couchUser@0.0.1",
+  "dist": {
+    "shasum": "c21ddc09ac252d74e8b0e820d6aa74a89848ac2c"
+  },
+  "_resolved": "git://github.com/twilson63/express-couchUser.git#2ccd791c6c62a849ee19e88e8a1920e74130f35e",
+  "_from": "git://github.com/twilson63/express-couchUser.git"
 }
