@@ -34,7 +34,7 @@ module.exports = function(config) {
   //
   // ### note: you can add more properties to 
   // your user registration object
-  app.post('/api/signup', function(req, res) {
+  app.post('/api/user/signup', function(req, res) {
     delete req.body.confirm_password;
     req.body.type = 'user';
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, done);
