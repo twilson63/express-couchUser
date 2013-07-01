@@ -13,7 +13,10 @@ module.exports = function(config) {
   events.EventEmitter.call(app);
   var couch = nano(config.db);
   var db = couch.use('_users');
-  var transport = nodemailer.createTransport("SMTP", config.email.smtp);
+  var transport = nodemailer.createTransport(
+    config.email.service, 
+    config.email[config.email.service]
+  );
 
   // add/update view
   db.get('_design/user', function(err, body) {

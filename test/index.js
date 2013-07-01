@@ -7,7 +7,8 @@ var couchUser = require('../');
 var config = {
   db: 'http://sa:stars@localhost:5984',
   app: {name: 'FooBar'},
-  email: { 
+  email: {
+    service: "smtp", 
     smtp: {
       service: "Gmail",
       auth: {
