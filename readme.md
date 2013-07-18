@@ -22,16 +22,70 @@ app.configure(function() {
 
 ## API Commands
 
-* signUp(name, password, data, email?, callback);
-* signIn(name, password, callback);
-* signOut(name, callback);
-* forgot(email, htmlTemplate, textTemplate, callback);
----
-* verify(name, code, callback);
-* reset(name, code, callback);
-* getUser(name, callback);
-* setUser(name, data, callback);
-* rmUser(name, callback);
+### POST /api/user/signup
+
+``` json
+{
+  "name": "user",
+  "password": "password",
+  "email": "user@email.com",
+  "data": {}
+}
+```
+
+### POST /api/user/signin
+
+``` json
+{
+  "name": "user",
+  "password": "password"
+}
+```
+
+### POST /api/user/signout
+
+``` json
+{
+  "name": "user"
+}
+```
+
+### POST /api/user/forgot
+
+``` json
+{
+  "email": "user@email.com"
+}
+```
+
+### POST /api/user/verify
+
+``` json
+{
+  "name": "user",
+  "code": "code"
+}
+```
+
+### POST /api/user/reset
+
+``` json
+{
+  "name": "user",
+  "code": "code"
+}
+```
+
+### GET /api/user
+
+### POST /api/user
+
+### GET /api/user/:id
+
+### PUT /api/user/:id
+
+### DELETE /api/user/:id
+
 
 ## Events
 

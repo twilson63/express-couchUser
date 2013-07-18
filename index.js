@@ -95,6 +95,7 @@ module.exports = function(config) {
     // and save user record
     function saveUser(err, body) {
       if (err) { return res.send(500, err); }
+      console.log(body);
       user = body.rows[0].value;
       // generate uuid save to document
       user.code = uuid.v1();
