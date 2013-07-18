@@ -1,6 +1,6 @@
 # express-user-couchdb - ExpressCouchDb Module
 
-This module is a simple authentication api built on top of couch's user model.
+This module is a authentication lib built on top of couch's user model.
 
 ## requirements
 
@@ -179,7 +179,7 @@ Here is an example of the config settings:
 
 to setup the forgot password email template you need to create a folder called `forgot` in the email template directory, then in that folder you need to create a style.css, html.ejs, and text.ejs.  These files will be used to build your email template.  Here is an example of the text.ejs
 
-* Forgot Password
+### Forgot Password
 
 ``` html
 Foo App
@@ -200,9 +200,30 @@ Thanks
 The Team
 ```
 
-* confirm e-mail
+### confirm e-mail
 
 If you plan to enable the users to register, you may want to send a confirmation email to them when they sign up.
 
 You would follow the same steps above, but instead of creating a forgot folder, you would need to create a confirm folder and place your css, html.ejs, and text.ejs files.
+
+## Contribution
+
+Pull requests are welcome.
+
+## License
+
+MIT
+
+## Support
+
+Please add issues to the github repo.
+
+## Thanks
+
+* CouchDb Team
+* NodeJS Team
+* NodeMailier
+* Nano Team
+* Email-Templates
+
 

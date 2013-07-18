@@ -1,3 +1,9 @@
+// # expressUserCouchDb
+//
+// This module is an express plugin module, which means you can 
+// require the module in your express app, and add it to your express 
+// application by using `app.use(user(config));`
+//
 var express = require('express');
 var nano = require('nano');
 var app = express();
@@ -82,7 +88,7 @@ module.exports = function(config) {
       user = body.rows[0].value;
       // generate uuid save to document
       user.code = uuid.v1();
-      db.insert(user, user._id, createEmail)
+      db.insert(user, user._id, createEmail);
     }
 
     // initialize the emailTemplate engine
@@ -164,4 +170,4 @@ module.exports = function(config) {
   });
 
   return app;
-}
+};
