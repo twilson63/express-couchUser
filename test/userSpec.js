@@ -10,7 +10,6 @@ var request = require('request');
 
 app.use(express.bodyParser());
 app.use(user({ couch: couchUrl + '/user_test'}));
-app.listen(3000);
 
 var userDoc = {
   name: 'user',
@@ -21,6 +20,14 @@ var userDoc = {
 
 describe('User API', function() {
   var db;
+  var server;
+  before(function(done) {
+    server = app.listen(3000, done);
+  });
+  after(function() {
+    server.close();
+  });
+  
   before(function(done) {
     nano.db.create('user_test', createView);
     function createView() {

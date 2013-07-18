@@ -76,33 +76,91 @@ app.configure(function() {
 }
 ```
 
-### GET /api/user
+### GET /api/user?roles=foo,bar
+
+[{ user... }, { user2... }]
 
 ### POST /api/user
 
-### GET /api/user/:id
+``` json
+{
+  "name": "user1",
+  "type": "user",
+  "password": "foo",
+  "roles": ['admin']
+}
+```
 
-### PUT /api/user/:id
+### GET /api/user/:name
 
-### DELETE /api/user/:id
+returns user object by username
 
+``` json
+{
+  "_id": "org.couchdb.user:user1",
+  "_rev": "1-123456",
+  "name": "user1",
+  "type": "user",
+  "password": "foo",
+  "roles": ['admin']
+}
+```
 
-## Events
+### PUT /api/user/:name
 
-* registered
-* loggedIn
-* loggedOut
-* forgotPassword
-* resetPassword
-* getUser
-* setUser
-* rmUser
+updates user object by username
 
-## setup
+``` json
+{
+  "_id": "org.couchdb.user:user1",
+  "_rev": "1-123456",
+  "name": "user1",
+  "type": "user",
+  "password": "foo",
+  "roles": ['admin']
+}
+```
 
-## usage example
+### DELETE /api/user/:name
+
+Removes user
+
+``` json
+{
+  "_id": "org.couchdb.user:user1",
+  "_rev": "1-123456",
+  "name": "user1",
+  "type": "user",
+  "password": "foo",
+  "roles": ['admin']
+}
+```
+
+## Usage
+
+``` js
+var user = require('express-user-couchdb');
+var config = { 
+  couch: 'http://localhost:5984/foo', 
+  email ....
+};
+app.config(function() {
+  // handle other requests first
+  app.use(express.router);
+  // handle core requests
+  app.use(user(config));
+});
+```
+
+``` json
+node init.js [couchdb users db]
+```
 
 ## what is htmlTemplate and textTemplate
+
+* After Registration
+* Forgot Password
+
 
 ## how to setup email options
 

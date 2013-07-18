@@ -54,7 +54,7 @@ module.exports = function(config) {
   // * name
   // * password
   app.post('/api/user/signin', function(req, res) {
-    couch.auth(req.body.name, req.body.password, genSession);
+    db.auth(req.body.name, req.body.password, genSession);
 
     function genSession(err, body, headers) {
       if (err) { return res.send(500, err); }
