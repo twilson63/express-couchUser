@@ -8,24 +8,12 @@ var userView = require('./lib/user');
 var _ = require('underscore');
 
 module.exports = function(config) {
-  // add event emitter to 
   var db = nano(config.couch);
-  //var db = couch.use('_users');
-  // var transport = nodemailer.createTransport(
-  //   config.email.service, 
-  //   config.email[config.email.service]
-  // );
+  var transport = nodemailer.createTransport(
+    config.email.service, 
+    config.email[config.email.service]
+  );
 
-  // add/update view
-  // db.get('_design/user', function(err, body) {
-  //   if (err && err.error === 'not_found') {
-  //     return db.insert(userView, '_design/user').pipe(process.stdout); 
-  //   }
-  //   if (body.version !== userView.version) {
-  //     userView._rev = body._rev;
-  //     db.insert(userView, '_design/user').pipe(process.stdout);
-  //   }
-  // });
   // ## register user
 
   // required properties on req.body
@@ -62,7 +50,6 @@ module.exports = function(config) {
         req.session.user = req.body.name;
         res.writeHead(200, { 'set-cookie': headers['set-cookie']});
         res.end(JSON.stringify(body));
-        //app.emit('user:signed-in', body);
       });
     }
   });
@@ -76,7 +63,6 @@ module.exports = function(config) {
     req.session.destroy();
     res.clearCookie('AuthSession');
     res.send({ok: true});
-    //app.emit('user:signed-out', body);
   });
 
   // forgot user password
@@ -93,7 +79,6 @@ module.exports = function(config) {
     // and save user record
     function saveUser(err, body) {
       if (err) { return res.send(500, err); }
-      console.log(body);
       user = body.rows[0].value;
       // generate uuid save to document
       user.code = uuid.v1();
