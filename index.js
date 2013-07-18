@@ -1,33 +1,31 @@
 var express = require('express');
 var nano = require('nano');
 var app = express();
-var events = require('events');
 var uuid = require('uuid');
 var emailTemplates = require('email-templates');
 var nodemailer = require('nodemailer');
 var userView = require('./lib/user');
+var _ = require('underscore');
 
 module.exports = function(config) {
   // add event emitter to 
-  //app.ee = new events.EventEmitter();
-  events.EventEmitter.call(app);
-  var couch = nano(config.db);
-  var db = couch.use('_users');
-  var transport = nodemailer.createTransport(
-    config.email.service, 
-    config.email[config.email.service]
-  );
+  var db = nano(config.couch);
+  //var db = couch.use('_users');
+  // var transport = nodemailer.createTransport(
+  //   config.email.service, 
+  //   config.email[config.email.service]
+  // );
 
   // add/update view
-  db.get('_design/user', function(err, body) {
-    if (err && err.error === 'not_found') {
-      return db.insert(userView, '_design/user').pipe(process.stdout); 
-    }
-    if (body.version !== userView.version) {
-      userView._rev = body._rev;
-      db.insert(userView, '_design/user').pipe(process.stdout);
-    }
-  });
+  // db.get('_design/user', function(err, body) {
+  //   if (err && err.error === 'not_found') {
+  //     return db.insert(userView, '_design/user').pipe(process.stdout); 
+  //   }
+  //   if (body.version !== userView.version) {
+  //     userView._rev = body._rev;
+  //     db.insert(userView, '_design/user').pipe(process.stdout);
+  //   }
+  // });
   // ## register user
 
   // required properties on req.body
@@ -151,17 +149,33 @@ module.exports = function(config) {
 
   app.get('/api/user/:name', function(req, res) {
     db.get('org.couchdb.user:' + req.params.name).pipe(res);
-    app.emit('user: get', { name: req.params.name });
   });
 
   app.put('/api/user/:name', function(req, res) {
     db.insert(req.body, 'org.couchdb.user:' + req.params.name).pipe(res);
-    app.emit('user: save', { name: req.params.name });
   });
 
-  app.del('/api/user/:name', function(res,res) {
-    db.destroy('org.couchdb.user:' + req.params.name).pipe(res);
-    app.emit('user: destroy', { name: req.params.name });
+  app.del('/api/user/:name', function(req,res) {
+    db.destroy('org.couchdb.user:' + req.params.name, req.body._rev).pipe(res);
+  });
+
+  // # user crud api
+  app.post('/api/user', function(req, res) {
+    req.body.type = 'user';
+    db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, body) {
+      if (err) { return res.send(500, err); }
+      res.send(body);
+    });
+  });
+
+  app.get('/api/user', function(req, res) {
+    if (!req.query.roles) { return res.send(500, {message: 'Roles are required!'}); }
+    var keys = req.query.roles.split(',');
+    db.view('user', 'role', {keys: keys}, function(err, body) {
+      if (err) { return res.send(500, err); }
+      var users = _(body.rows).pluck('value');
+      res.send(users);
+    });
   });
 
   return app;
