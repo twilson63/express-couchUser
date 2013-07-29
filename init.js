@@ -4,14 +4,16 @@
 var nano = require('nano');
 var userView = require('./lib/user');
 
-module.exports = init = function(couch) {
+module.exports = init = function(couch, cb) {
   var db = nano(couch);
-  db.insert(userView,'_design/user',
-    function(err, body) {
-      if(!module.parent) {
-        console.log(body);
-      }
-    })
+  db.insert(userView,'_design/user', function(err, body) {
+    if (err) {
+      console.log(err);
+      if (cb) { cb(err); }
+    }
+    if (!module.parent) { console.log(body); }
+    if (cb) { cb(null); }
+  });
 }
 
 if (!module.parent) {
