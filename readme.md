@@ -20,6 +20,25 @@ app.configure(function() {
 
 ```
 
+## Initialize CouchDb
+
+Before you can use this module, you need to run a setup process to add the required views to the couchDb Users table, there is an `init.js` file that does this for you.  You can include it in your Gruntfile as a task.
+
+``` js
+grunt.registerTask('setup', 'setup database', function() {
+  var userSetup = require('./node_modules/express-user-couchdb/init');
+  userSetup('http://localhost:5984', function(err) {
+    console.log("configured express-user-couchdb module");
+  });
+});
+```
+
+or you can invoke via command line
+
+``` sh
+node ./node_modules/express-user-couchdb/init http://localhost:5984
+```
+
 ## API Commands
 
 ### POST /api/user/signup
