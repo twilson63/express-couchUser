@@ -27,7 +27,7 @@ Before you can use this module, you need to run a setup process to add the requi
 ``` js
 grunt.registerTask('setup', 'setup database', function() {
   var userSetup = require('./node_modules/express-user-couchdb/init');
-  userSetup('http://localhost:5984', function(err) {
+  userSetup('http://localhost:5984/_users', function(err) {
     console.log("configured express-user-couchdb module");
   });
 });
@@ -36,7 +36,7 @@ grunt.registerTask('setup', 'setup database', function() {
 or you can invoke via command line
 
 ``` sh
-node ./node_modules/express-user-couchdb/init http://localhost:5984
+node ./node_modules/express-user-couchdb/init http://localhost:5984/_users
 ```
 
 ## API Commands
