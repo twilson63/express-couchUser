@@ -15,10 +15,15 @@ var _ = require('underscore');
 
 module.exports = function(config) {
   var db = nano(config.couch);
-  var transport = nodemailer.createTransport(
-    config.email.service, 
-    config.email[config.email.service]
-  );
+  var transport;  
+  try {
+    transport = nodemailer.createTransport(
+      config.email.service, 
+      config.email[config.email.service]
+    );
+  } catch (err) {
+    console.log('*** Email Service is not configured ***');
+  }
 
   // ## register user
 
@@ -106,6 +111,7 @@ module.exports = function(config) {
     // send rendered template to user
     function sendEmail(err, html, text) {
       if (err) { return res.send(500, err); }
+      if (!transport) { return res.send(500, { error: 'transport is not configured!'}); }
       transport.sendMail({
         from: config.email.from,
         to: user.email,
