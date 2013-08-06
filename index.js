@@ -58,7 +58,7 @@ module.exports = function(config) {
     function genSession(err, body, headers) {
       if (err) { return res.send(500, err); }
       req.session.regenerate(function() {
-        req.session.user = req.body.name;
+        req.session.user = req.body;
         res.writeHead(200, { 'set-cookie': headers['set-cookie']});
         res.end(JSON.stringify(body));
       });
