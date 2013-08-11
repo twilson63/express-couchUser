@@ -57,10 +57,14 @@ module.exports = function(config) {
 
     function genSession(err, body, headers) {
       if (err) { return res.send(500, err); }
-      req.session.regenerate(function() {
-        req.session.user = req.body.name;
-        res.writeHead(200, { 'set-cookie': headers['set-cookie']});
-        res.end(JSON.stringify(body));
+      db.get('org.couchdb.user:' + body.name, function(err, user) {
+        if (err) { return res.send(500, err); }
+        delete user.salt;
+        req.session.regenerate(function() {
+          req.session.user = user;
+          res.writeHead(200, { 'set-cookie': headers['set-cookie']});
+          res.end(JSON.stringify(user));
+        });
       });
     }
   });
