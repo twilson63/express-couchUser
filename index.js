@@ -14,7 +14,7 @@ var userView = require('./lib/user');
 var _ = require('underscore');
 
 module.exports = function(config) {
-  var db = nano(config.couch);
+  var db = nano(config.users);
   var transport;  
   try {
     transport = nodemailer.createTransport(

@@ -15,7 +15,12 @@ var express = require('express');
 var app = express();
 
 app.configure(function() {
-  app.use(couchUser(config));
+  app.use(couchUser({
+    users: 'http://localhost:5984/_users',
+    email: {
+      ...
+    }
+  }));
 });
 
 ```
@@ -160,7 +165,7 @@ Removes user
 ``` js
 var user = require('express-user-couchdb');
 var config = { 
-  couch: 'http://localhost:5984/foo', 
+  users: 'http://localhost:5984/_users', 
   email ....
 };
 app.config(function() {
