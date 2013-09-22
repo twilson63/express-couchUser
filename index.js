@@ -57,7 +57,7 @@ module.exports = function(config) {
 
     function genSession(err, body, headers) {
       if (err) { return res.send(500, err); }
-      db.get('org.couchdb.user:' + body.name, function(err, user) {
+      db.get('org.couchdb.user:' + req.body.name, function(err, user) {
         if (err) { return res.send(500, err); }
         delete user.salt;
         req.session.regenerate(function() {
@@ -109,6 +109,8 @@ module.exports = function(config) {
     // render forgot.ejs
     function renderForgotTemplate(err, template) {
       if (err) { return res.send(500, err); }
+      // use header host for reset url
+      config.app.url = 'https://' + req.headers.host;
       template('forgot', { user: user, app: config.app }, sendEmail);
     }
 
