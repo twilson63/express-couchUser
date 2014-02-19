@@ -57,7 +57,7 @@ module.exports = function(config) {
 
     function genSession(err, body, headers) {
       if (err) { return res.send(500, err); }
-      db.get('org.couchdb.user:' + req.body.name, function(err, user) {
+      db.get('org.couchdb.user:' + body.name, function(err, user) {
         if (err) { return res.send(500, err); }
         delete user.salt;
         req.session.regenerate(function() {
@@ -94,6 +94,11 @@ module.exports = function(config) {
     // and save user record
     function saveUser(err, body) {
       if (err) { return res.send(500, err); }
+
+      if (body.rows && body.rows.length === 0) {
+        return res.send(500, { ok: false, message: 'No user found with that email.' });
+      }
+
       user = body.rows[0].value;
       // generate uuid save to document
       user.code = uuid.v1();
@@ -110,7 +115,7 @@ module.exports = function(config) {
     function renderForgotTemplate(err, template) {
       if (err) { return res.send(500, err); }
       // use header host for reset url
-      config.app.url = 'https://' + req.headers.host;
+      config.app.url = 'http://' + req.headers.host;
       template('forgot', { user: user, app: config.app }, sendEmail);
     }
 
@@ -134,18 +139,40 @@ module.exports = function(config) {
     }
   });
 
+  app.get('/api/user/code/:code', function(req, res) {
+    if (!req.params.code) {
+      return res.send(500, {ok: false, message: 'No code sent.'});
+    }
+
+    db.view('user', 'code', {key: req.params.code}, function(err, body) {
+      if (err) { return res.send(500, err); }
+      if (body.rows.length > 1) {
+        return res.send(500, { ok: false, message: 'More than one user found.'});
+      } else if (body.rows.length === 0) {
+        return res.send(500, {ok: false, message: 'Reset code is not valid.'})
+      } else {
+        var user = body.rows[0].value;
+        var name = user.name;
+        if (user.fname && user.lname) {
+          name = user.fname + ' ' + user.lname;
+        }
+        return res.send(200, {ok: true, user: { name: name } });
+      }
+    });
+  });
+
   app.post('/api/user/reset', function(req, res) {
     // get user by code
     db.view('user', 'code', { key: req.body.code }, checkCode);
     function checkCode(err, body) {
       if (err) { return res.send(500, err); }
       if (body.rows && body.rows.length === 0) {
-        return res.send(500, {message: 'Not Found'});
+        return res.send(500, {ok: false, message: 'Not Found'});
       }
       var user = body.rows[0].value;
       user.password = req.body.password;
       // clear code
-      user.code = '';
+      delete user.code;
       db.insert(user, user._id).pipe(res);
     }
   });
