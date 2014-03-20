@@ -40,7 +40,7 @@ module.exports = function(config) {
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, done);
 
     function done(err, body) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       res.send(body);
       //app.emit('user:signed-up', body);
     }
@@ -56,9 +56,9 @@ module.exports = function(config) {
     db.auth(req.body.name, req.body.password, genSession);
 
     function genSession(err, body, headers) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       db.get('org.couchdb.user:' + body.name, function(err, user) {
-        if (err) { return res.send(500, err); }
+        if (err) { return res.send(err.status_code, err); }
         delete user.salt;
         req.session.regenerate(function() {
           req.session.user = user;
@@ -93,7 +93,7 @@ module.exports = function(config) {
     // generate uuid code
     // and save user record
     function saveUser(err, body) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
 
       if (body.rows && body.rows.length === 0) {
         return res.send(500, { ok: false, message: 'No user found with that email.' });
@@ -107,13 +107,13 @@ module.exports = function(config) {
 
     // initialize the emailTemplate engine
     function createEmail(err, body) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       emailTemplates(config.email.templateDir, renderForgotTemplate);
     }
 
     // render forgot.ejs
     function renderForgotTemplate(err, template) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       // use header host for reset url
       config.app.url = 'http://' + req.headers.host;
       template('forgot', { user: user, app: config.app }, sendEmail);
@@ -121,7 +121,7 @@ module.exports = function(config) {
 
     // send rendered template to user
     function sendEmail(err, html, text) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       if (!transport) { return res.send(500, { error: 'transport is not configured!'}); }
       transport.sendMail({
         from: config.email.from,
@@ -133,7 +133,7 @@ module.exports = function(config) {
 
     // complete action
     function done(err, status) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       res.send({ ok: true });
       //app.emit('user: forgot password', user);
     }
@@ -145,7 +145,7 @@ module.exports = function(config) {
     }
 
     db.view('user', 'code', {key: req.params.code}, function(err, body) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       if (body.rows.length > 1) {
         return res.send(500, { ok: false, message: 'More than one user found.'});
       } else if (body.rows.length === 0) {
@@ -165,7 +165,7 @@ module.exports = function(config) {
     // get user by code
     db.view('user', 'code', { key: req.body.code }, checkCode);
     function checkCode(err, body) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       if (body.rows && body.rows.length === 0) {
         return res.send(500, {ok: false, message: 'Not Found'});
       }
@@ -193,7 +193,7 @@ module.exports = function(config) {
   app.post('/api/user', function(req, res) {
     req.body.type = 'user';
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, body) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       res.send(body);
     });
   });
@@ -202,7 +202,7 @@ module.exports = function(config) {
     if (!req.query.roles) { return res.send(500, {message: 'Roles are required!'}); }
     var keys = req.query.roles.split(',');
     db.view('user', 'role', {keys: keys}, function(err, body) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(err.status_code, err); }
       var users = _(body.rows).pluck('value');
       res.send(users);
     });
