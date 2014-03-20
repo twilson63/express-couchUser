@@ -25,7 +25,62 @@ module.exports = function(config) {
     console.log('*** Email Service is not configured ***');
   }
 
-  // ## register user
+  function verifyUserByEmail(email) {
+      var user;
+      // use email address to find user
+      db.view('user', 'all', { key: email }, saveUserVerificationDetails);
+
+      function saveUserVerificationDetails(err, body) {
+          if (err) { throw(err); }
+
+          if (body.rows && body.rows.length === 0) {
+              var error = new Error('No user found with the specified email address.');
+              error.status_code = 404;
+              throw(error);
+          }
+
+          user = body.rows[0].value;
+          // TODO:  Add an expiration date for the verification code and check it.
+          user.verification_code = uuid.v1();
+          db.insert(user, user._id, verificationEmail);
+      }
+
+      // initialize the emailTemplate engine
+      function verificationEmail(err, body) {
+          if (err) { throw(err); }
+          emailTemplates(config.email.templateDir, renderVerificationTemplate);
+      }
+
+      // render verify template
+      function renderVerificationTemplate(err, template) {
+          if (err) { throw(err); }
+          // use header host for reset url
+          config.app.url = 'http://' + req.headers.host;
+          template('verify', { user: user, app: config.app }, sendVerificationEmail);
+      }
+
+      // send rendered template to user
+      function sendVerificationEmail(err, html, text) {
+          if (err) { throw(err); }
+          if (!transport) {
+              var error = new Error('Mail transport is not configured!');
+              error.status_code = 500;
+              throw(error);
+          }
+          transport.sendMail({
+              from: config.email.from,
+              to: user.email,
+              subject: config.app.name + ': Please Verify Your Account',
+              html: html,
+              text: text }, done);
+      }
+
+      // complete action
+      function done(err, status) {
+          if (err) { throw(err); }
+          //app.emit('user: verify account', user);
+      }
+  }
 
   // required properties on req.body
   // * name
@@ -37,18 +92,28 @@ module.exports = function(config) {
   app.post('/api/user/signup', function(req, res) {
     delete req.body.confirm_password;
     req.body.type = 'user';
+
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, done);
 
     function done(err, body) {
       if (err) { return res.send(err.status_code, err); }
-      res.send(body);
-      //app.emit('user:signed-up', body);
+
+      if (config.verify) {
+        try {
+            verifyUserByEmail(req.body.email);
+            res.send(body);
+            //app.emit('user:signed-up', body);
+        }
+        catch (err) {
+            res.send(err.status_code, err);
+        }
+      }
     }
   });
 
   // login user
   
-  // reequired properties on req.body
+  // required properties on req.body
 
   // * name
   // * password
@@ -59,6 +124,11 @@ module.exports = function(config) {
       if (err) { return res.send(err.status_code, err); }
       db.get('org.couchdb.user:' + body.name, function(err, user) {
         if (err) { return res.send(err.status_code, err); }
+
+        if (config.verify && !user.verified) {
+            return res.send(401, { error: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'});
+        }
+
         delete user.salt;
         req.session.regenerate(function() {
           req.session.user = user;
@@ -139,6 +209,7 @@ module.exports = function(config) {
     }
   });
 
+
   app.get('/api/user/code/:code', function(req, res) {
     if (!req.params.code) {
       return res.send(500, {ok: false, message: 'No code sent.'});
@@ -176,6 +247,61 @@ module.exports = function(config) {
       db.insert(user, user._id).pipe(res);
     }
   });
+
+    // Send (or resend) verification code to user
+    app.get('/api/user/verify/:email', function(req, res) {
+        if (!req.params.email) {
+            return res.send(400, {ok: false, message: 'An email address is required before a verification code can be sent.'});
+        }
+
+        try {
+            verifyUserByEmail(req.body.email);
+            res.send(body);
+            //app.emit('user:signed-up', body);
+        }
+        catch (err) {
+            res.send(err.status_code, err);
+        }
+    });
+
+
+    // Accept a verification code and flag the user as verified.
+    // required properties on req.body
+    // * email
+    // * code
+    app.post('/api/user/verify', function(req,res) {
+        if (!req.body.email || !req.body.code) {
+            return res.send(400, {ok: false, message: 'An email address and verification code are required in order to verify an account.'});
+        }
+
+        var user;
+        // use email address to find user
+        db.view('user', 'all', { key: req.body.email }, saveUser);
+
+        function saveUser(err, body) {
+            if (err) { return res.send(err.status_code, err); }
+
+            if (body.rows && body.rows.length === 0) {
+                return res.send(404, { ok: false, message: 'No user found with that email.' });
+            }
+
+            // TODO:  Add an expiration date for the verification code and check it.
+
+            user = body.rows[0].value;
+            if (!user.verification_code || user.verification_code !== req.body.code) {
+                return res.send(400, { ok: false, message: 'The verification code you attempted to use does not match our records.' });
+            }
+
+            delete user.verification_code;
+            user.verified = new Date();
+            db.insert(user, user._id, function(err, body) {
+                if (err) { return res.send(err.status_code, err); }
+                return res.send(200,"Account verified.")
+            });
+        }
+
+        res.send(500,'Unknown error verifying user account...');
+    });
 
   app.get('/api/user/:name', function(req, res) {
     db.get('org.couchdb.user:' + req.params.name).pipe(res);
