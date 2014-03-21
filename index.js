@@ -234,7 +234,7 @@ module.exports = function(config) {
             // TODO:  Add an expiration date for the verification code and check it.
 
             user = body.rows[0].value;
-            if (!user.verification_code || user.verification_code !== req.body.code) {
+            if (!user.verification_code || user.verification_code !== req.params.code) {
                 return res.send(400, { ok: false, message: 'The verification code you attempted to use does not match our records.' });
             }
 
