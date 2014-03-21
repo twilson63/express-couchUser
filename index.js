@@ -197,7 +197,7 @@ module.exports = function(config) {
     // Send (or resend) verification code to a user's email address
     // required properties on req.body
     // * email
-    app.post('/api/user/verify/', function(req, res) {
+    app.post('/api/user/verify', function(req, res) {
         if (!req.body.email) {
             return res.send(400, {ok: false, message: 'An email address must be passed as part of the query string before a verification code can be sent.'});
         }
