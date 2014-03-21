@@ -54,8 +54,6 @@ module.exports = function(config) {
       // render verify template
       function renderVerificationTemplate(err, template) {
           if (err) { throw(err); }
-          // use header host for reset url
-          config.app.url = 'http://' + req.headers.host;
           template('verify', { user: user, app: config.app }, sendVerificationEmail);
       }
 
