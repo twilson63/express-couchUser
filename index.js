@@ -247,15 +247,19 @@ module.exports = function(config) {
   });
 
     // Send (or resend) verification code to user
+    app.get('/api/user/verify', function(req, res) {
+        return res.send(400, {ok: false, message: 'An email address is required before a verification code can be sent.'});
+    });
+
+    // Send (or resend) verification code to user
     app.get('/api/user/verify/:email', function(req, res) {
         if (!req.params.email) {
-            return res.send(400, {ok: false, message: 'An email address is required before a verification code can be sent.'});
+            return res.send(400, {ok: false, message: 'An email address must be passed as part of the query string before a verification code can be sent.'});
         }
 
         try {
-            verifyUserByEmail(req.body.email);
-            res.send(body);
-            //app.emit('user:signed-up', body);
+            verifyUserByEmail(req.params.email);
+            res.send(200,"Verification code sent...");
         }
         catch (err) {
             res.send(err.status_code, err);
