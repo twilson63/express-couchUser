@@ -48,6 +48,8 @@ node ./node_modules/express-user-couchdb/init http://localhost:5984/_users
 
 ### POST /api/user/signup
 
+Create a new user account.  If config.verify is set, the user will be sent an email with a link to verify their account.
+
 ``` json
 {
   "name": "user",
@@ -58,6 +60,8 @@ node ./node_modules/express-user-couchdb/init http://localhost:5984/_users
 ```
 
 ### POST /api/user/signin
+
+Allow a user to log in.  If config.verify is set, then the user is required to validate their email address before logging in.
 
 ``` json
 {
@@ -82,16 +86,23 @@ node ./node_modules/express-user-couchdb/init http://localhost:5984/_users
 }
 ```
 
-### POST /api/user/verify
+### POST /api/user/verify:email
+
+Send an email to a user that includes a verification code and link to verify their account.
 
 ``` json
 {
-  "name": "user",
-  "code": "code"
+  "name": "email"
 }
 ```
 
+### POST /api/user/verify/:code
+
+Confirm that a user's email address is valid using a previously generated verification code.
+
 ### POST /api/user/reset
+
+Reset a user's password (requires the code generated using /api/user/forgot).
 
 ``` json
 {
@@ -105,6 +116,8 @@ node ./node_modules/express-user-couchdb/init http://localhost:5984/_users
 [{ user... }, { user2... }]
 
 ### POST /api/user
+
+Create a new user.
 
 ``` json
 {
@@ -147,7 +160,7 @@ updates user object by username
 
 ### DELETE /api/user/:name
 
-Removes user
+Removes the specified user.
 
 ``` json
 {
