@@ -73,6 +73,8 @@ module.exports = function(config) {
         delete user.salt;
         req.session.regenerate(function() {
           req.session.user = user;
+          req.session.save();
+
           res.writeHead(200, { 'set-cookie': headers['set-cookie']});
           res.end(JSON.stringify(user));
         });
