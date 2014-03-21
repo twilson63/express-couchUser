@@ -247,6 +247,15 @@ module.exports = function(config) {
         }
     });
 
+    app.get('/api/user/current', function(req, res) {
+        if (!req.session || !req.session.user) {
+            return res.send(400,"Not currently logged in.");
+        }
+
+        res.writeHead(200, "Currently logged in.");
+        res.end(JSON.stringify(req.session.user));
+    });
+
   app.get('/api/user/:name', function(req, res) {
     db.get('org.couchdb.user:' + req.params.name).pipe(res);
   });
