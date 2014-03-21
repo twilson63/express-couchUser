@@ -333,6 +333,6 @@ module.exports = function(config) {
             //app.emit('user: verify account', user);
         }
     }
-    
+
   return app;
 };
