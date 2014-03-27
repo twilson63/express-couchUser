@@ -169,7 +169,7 @@ module.exports = function(config) {
         if (user.fname && user.lname) {
           name = user.fname + ' ' + user.lname;
         }
-        return res.send(200, {ok: true, user: { name: name } });
+        return res.send(200, {ok: true, user: strip(user) });
       }
     });
   });
@@ -194,7 +194,10 @@ module.exports = function(config) {
       user.password = req.body.password;
       // clear code
       delete user.code;
-      db.insert(user, user._id).pipe(res);
+      db.insert(user, user._id, function(err,user) {
+          if (err) { return res.send(err.status_code, err); }
+          return res.send(200, {ok: true, user: strip(user) });
+      });
     }
   });
 
@@ -264,14 +267,20 @@ module.exports = function(config) {
       if (!req.session || !req.session.user) {
           return res.send(400,"You must be logged in to use this function");
       }
-      db.get('org.couchdb.user:' + req.params.name).pipe(res);
+      db.get('org.couchdb.user:' + req.params.name, function(err,user) {
+          if (err) { return res.send(err.status_code, err); }
+          return res.send(200, {ok: true, user: strip(user) });
+      });
   });
 
   app.put('/api/user/:name', function(req, res) {
     if (!req.session || !req.session.user) {
         return res.send(400,"You must be logged in to use this function");
     }
-    db.insert(req.body, 'org.couchdb.user:' + req.params.name).pipe(res);
+    db.insert(req.body, 'org.couchdb.user:' + req.params.name, function(err,user) {
+        if (err) { return res.send(err.status_code, err); }
+        return res.send(200, {ok: true, user: strip(user) });
+    });
   });
 
   app.del('/api/user/:name', function(req,res) {
