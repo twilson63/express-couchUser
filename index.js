@@ -288,9 +288,11 @@ module.exports = function(config) {
       if (!req.session || !req.session.user) {
           return res.send(400,"You must be logged in to use this function");
       }
+      db.get('org.couchdb.user:' + req.params.name, function(err,user) {
+          if (err) { return res.send(err.status_code, err); }
 
-      // TODO:  Fix this so that we can correctly delete the upstream user (may require looking up the full data first)
-      db.destroy('org.couchdb.user:' + req.params.name, req.body._rev).pipe(res);
+          db.destroy(user._id, user._rev).pipe(res);
+      });
   });
 
   // # user crud api
