@@ -46,7 +46,8 @@ module.exports = function(config) {
       if (config.verify) {
         try {
             validateUserByEmail(req.body.email);
-            res.send(strip(body));
+            // TODO:  Strip this properly
+            res.send(body);
             //app.emit('user:signed-up', body);
         }
         catch (err) {
@@ -287,6 +288,8 @@ module.exports = function(config) {
       if (!req.session || !req.session.user) {
           return res.send(400,"You must be logged in to use this function");
       }
+
+      // TODO:  Fix this so that we can correctly delete the upstream user (may require looking up the full data first)
       db.destroy('org.couchdb.user:' + req.params.name, req.body._rev).pipe(res);
   });
 
