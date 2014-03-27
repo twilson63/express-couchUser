@@ -46,9 +46,10 @@ module.exports = function(config) {
       if (config.verify) {
         try {
             validateUserByEmail(req.body.email);
-            // TODO:  Strip this properly
-            res.send(body);
-            //app.emit('user:signed-up', body);
+            db.get(body._id, function(err,user) {
+                if (err) { return res.send(err.status_code, err); }
+                res.send(strip(user));
+            });
         }
         catch (err) {
             res.send(err.status_code, err);
@@ -278,9 +279,20 @@ module.exports = function(config) {
     if (!req.session || !req.session.user) {
         return res.send(400,"You must be logged in to use this function");
     }
-    db.insert(req.body, 'org.couchdb.user:' + req.params.name, function(err,user) {
+
+    db.get('org.couchdb.user:' + req.params.name, function(err, user) {
         if (err) { return res.send(err.status_code, err); }
-        return res.send(200, {ok: true, user: strip(user) });
+
+        var updates = strip(req.params);
+        var keys = Object.keys(updates);
+        for (var i in keys) {
+            var key = keys[i];
+            user[key] = updates[keys];
+        }
+        db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, updatedUser) {
+            if (err) { return res.send(err.status_code, err); }
+            return res.send(200, {ok: true, user: strip(updatedUser) });
+        });
     });
   });
 
@@ -291,7 +303,10 @@ module.exports = function(config) {
       db.get('org.couchdb.user:' + req.params.name, function(err,user) {
           if (err) { return res.send(err.status_code, err); }
 
-          db.destroy(user._id, user._rev).pipe(res);
+          db.destroy(user._id, user._rev, function(err,body) {
+              if (err) { return res.send(err.status_code, er    r); }
+              return res.send(200,"User '" + req.params.name + "' deleted.");
+          });
       });
   });
 
