@@ -25,7 +25,8 @@
     "uuid": "~1.4.1",
     "nodemailer": "~0.4.4",
     "email-templates": "~0.1.0",
-    "underscore": "~1.5.1"
+    "underscore": "~1.5.1",
+    "only": "0.0.2"
   },
   "readmeFilename": "readme.md",
   "dist": {

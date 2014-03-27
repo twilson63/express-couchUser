@@ -12,8 +12,10 @@ var emailTemplates = require('email-templates');
 var nodemailer = require('nodemailer');
 var userView = require('./lib/user');
 var _ = require('underscore');
+var only = require('only');
 
 module.exports = function(config) {
+  var safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles";
   var db = nano(config.users);
   var transport;  
   try {
@@ -44,7 +46,7 @@ module.exports = function(config) {
       if (config.verify) {
         try {
             validateUserByEmail(req.body.email);
-            res.send(body);
+            res.send(strip(body));
             //app.emit('user:signed-up', body);
         }
         catch (err) {
@@ -76,7 +78,7 @@ module.exports = function(config) {
           req.session.save();
 
           res.writeHead(200, { 'set-cookie': headers['set-cookie']});
-          res.end(JSON.stringify(user));
+          res.end(JSON.stringify(strip(user)));
         });
       });
     }
@@ -255,23 +257,35 @@ module.exports = function(config) {
         }
 
         res.writeHead(200, "Currently logged in.");
-        res.end(JSON.stringify(req.session.user));
+        res.end(JSON.stringify(strip(req.session.user)));
     });
 
   app.get('/api/user/:name', function(req, res) {
-    db.get('org.couchdb.user:' + req.params.name).pipe(res);
+      if (!req.session || !req.session.user) {
+          return res.send(400,"You must be logged in to use this function");
+      }
+      db.get('org.couchdb.user:' + req.params.name).pipe(res);
   });
 
   app.put('/api/user/:name', function(req, res) {
+    if (!req.session || !req.session.user) {
+        return res.send(400,"You must be logged in to use this function");
+    }
     db.insert(req.body, 'org.couchdb.user:' + req.params.name).pipe(res);
   });
 
   app.del('/api/user/:name', function(req,res) {
-    db.destroy('org.couchdb.user:' + req.params.name, req.body._rev).pipe(res);
+      if (!req.session || !req.session.user) {
+          return res.send(400,"You must be logged in to use this function");
+      }
+      db.destroy('org.couchdb.user:' + req.params.name, req.body._rev).pipe(res);
   });
 
   // # user crud api
   app.post('/api/user', function(req, res) {
+    if (!req.session || !req.session.user) {
+        return res.send(400,"You must be logged in to use this function");
+    }
     req.body.type = 'user';
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, body) {
       if (err) { return res.send(err.status_code, err); }
@@ -280,15 +294,27 @@ module.exports = function(config) {
   });
 
   app.get('/api/user', function(req, res) {
+    if (!req.session || !req.session.user) {
+        return res.send(400,"You must be logged in to use this function");
+    }
     if (!req.query.roles) { return res.send(500, {message: 'Roles are required!'}); }
     var keys = req.query.roles.split(',');
     db.view('user', 'role', {keys: keys}, function(err, body) {
       if (err) { return res.send(err.status_code, err); }
       var users = _(body.rows).pluck('value');
-      res.send(users);
+      res.send(stripArray(users));
     });
   });
 
+    function strip(value) {
+        return only(value, safeUserFields);
+    }
+
+    function stripArray(array) {
+        var returnArray = [];
+        array.forEach(function(value) { returnArray.push(only(value, safeUserFields)); });
+        return returnArray;
+    }
 
     function validateUserByEmail(email) {
         var user;
