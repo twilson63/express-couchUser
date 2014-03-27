@@ -14,6 +14,10 @@ var couchUser = require('express-couchUser');
 var express = require('express');
 var app = express();
 
+// Required for session storage
+app.use(express.cookieParser());
+app.use(express.session({ secret: 'Use something else here.'}));
+
 app.configure(function() {
   app.use(couchUser({
     users: 'http://localhost:5984/_users',
