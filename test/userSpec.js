@@ -156,6 +156,7 @@ describe('User API Tests', function() {
 //        roles: ['school1']
 //      };
 //      db.insert(doc, 'org.couchdb.user:' + doc.name, function(err, body) {
+//        debugger;
 //        user5 = doc;
 //        user5._id = body.id;
 //        user5._rev = body.rev;
@@ -163,9 +164,11 @@ describe('User API Tests', function() {
 //      });
 //    });
 //    it('should return user doc', function(done) {
+//      debugger;
 //      request.del('http://localhost:3000/api/user/' + 'user5',
 //        {json: user5},
 //        function(e,r,b) {
+//          debugger;
 //          expect(b.ok).to.be.ok();
 //          done();
 //        });
