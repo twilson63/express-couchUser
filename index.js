@@ -302,10 +302,10 @@ module.exports = function(config) {
 
             // If a user updates their record, we need to update the session data
             if (req.session.user.name === req.params.name) {
-                req.session.user = updatedUser;
+                req.session.user = user;
             }
 
-            return res.send(200, JSON.stringify({ok: true, user: strip(updatedUser) }));
+            return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
         });
     });
   });
