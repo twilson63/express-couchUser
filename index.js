@@ -315,7 +315,7 @@ module.exports = function(config) {
       if (!req.session || !req.session.user) {
           return res.send(401, JSON.stringify({ok: false, message: "You must be logged in to use this function"}));
       }
-      else if (config.adminRoles && !hasAdminPermission(req.session.user) && req.session.user.name !== req.params.name) {
+      else if (config.adminRoles && !hasAdminPermission(req.session.user)) {
           return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
       }
 
