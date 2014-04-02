@@ -23,11 +23,13 @@ app.configure(function() {
     users: 'http://localhost:5984/_users',
     email: {
       ...
-    }
+    },
+    adminRoles: [ 'admin' ]
   }));
 });
 
 ```
+The optional adminRoles attribute allows you to specify one or more administrative roles that are allowed to add, update, and delete users.
 
 ## Initialize CouchDb
 
@@ -122,11 +124,13 @@ Reset a user's password (requires the code generated using /api/user/forgot).
 
 ### GET /api/user?roles=foo,bar
 
+Return a list of users matching the specified roles.
+
 [{ user... }, { user2... }]
 
 ### POST /api/user
 
-Create a new user.
+Create a new user.  If config.adminRoles is set, the user making this call must have one of the specified roles.
 
 ``` json
 {
@@ -139,7 +143,7 @@ Create a new user.
 
 ### GET /api/user/:name
 
-returns user object by username
+Returns the user whose name matches :name.
 
 ``` json
 {
@@ -154,7 +158,7 @@ returns user object by username
 
 ### PUT /api/user/:name
 
-updates user object by username
+Updates the user specified by :name.  If config.adminRoles is set, then a user must have an admin role to be able to update anyone else's record.  Non-admins cannot update their own role information.
 
 ``` json
 {
@@ -169,7 +173,7 @@ updates user object by username
 
 ### DELETE /api/user/:name
 
-Removes the specified user.
+Removes the specified user.  If config.adminRoles is set, then a user must have an admin role to be able to delete a user.
 
 ``` json
 {
