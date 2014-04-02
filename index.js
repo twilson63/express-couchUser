@@ -73,6 +73,8 @@ module.exports = function(config) {
         delete user.salt;
         req.session.regenerate(function() {
           req.session.user = user;
+          req.session.save();
+
           res.writeHead(200, { 'set-cookie': headers['set-cookie']});
           res.end(JSON.stringify(user));
         });
@@ -245,6 +247,15 @@ module.exports = function(config) {
                 return res.send(200,"Account verified.")
             });
         }
+    });
+
+    app.get('/api/user/current', function(req, res) {
+        if (!req.session || !req.session.user) {
+            return res.send(400,"Not currently logged in.");
+        }
+
+        res.writeHead(200, "Currently logged in.");
+        res.end(JSON.stringify(req.session.user));
     });
 
   app.get('/api/user/:name', function(req, res) {
