@@ -292,6 +292,9 @@ module.exports = function(config) {
         var keys = Object.keys(updates);
         for (var i in keys) {
             var key = keys[i];
+            if (key === "roles" && !hasAdminPermission(req.session.user)) {
+                log.warn("Stripped updated role information, non-admin users are not allowed to change roles.");
+            }
             user[key] = updates[keys];
         }
         db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, updatedUser) {
