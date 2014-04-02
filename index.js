@@ -256,17 +256,19 @@ module.exports = function(config) {
         }
     });
 
+    // Return the name of the currently logged in user.
     app.get('/api/user/current', function(req, res) {
         if (!req.session || !req.session.user) {
-            return res.send(400,JSON.stringify({ok:false, message: "Not currently logged in."}));
+            return res.send(401,JSON.stringify({ok:false, message: "Not currently logged in."}));
         }
 
         res.send(200, JSON.stringify({ok: true, user: strip(req.session.user)}));
     });
 
+  // Look up another user's information
   app.get('/api/user/:name', function(req, res) {
       if (!req.session || !req.session.user) {
-          return res.send(400,JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
+          return res.send(401,JSON.stringify({ok:false, message: "You must be logged in to use this function."}));
       }
       db.get('org.couchdb.user:' + req.params.name, function(err,user) {
           if (err) { return res.send(err.status_code, err); }
@@ -274,45 +276,72 @@ module.exports = function(config) {
       });
   });
 
+  // Create a new user or update an existing user
   app.put('/api/user/:name', function(req, res) {
     if (!req.session || !req.session.user) {
-        return res.send(400,JSON.stringify({ ok:false, message: "You must be logged in to use this function"}));
+        return res.send(401,JSON.stringify({ ok:false, message: "You must be logged in to use this function"}));
+    }
+    else if (config.adminRoles && !hasAdminPermission(req.session.user) && req.session.user.name !== req.params.name) {
+        return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
     }
 
-    db.get('org.couchdb.user:' + req.params.name, function(err, user) {
+      db.get('org.couchdb.user:' + req.params.name, function(err, user) {
         if (err) { return res.send(err.status_code, err); }
 
         var updates = strip(req.params);
         var keys = Object.keys(updates);
         for (var i in keys) {
             var key = keys[i];
+            if (key === "roles" && !hasAdminPermission(req.session.user)) {
+                log.warn("Stripped updated role information, non-admin users are not allowed to change roles.");
+            }
             user[key] = updates[keys];
         }
         db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, updatedUser) {
             if (err) { return res.send(err.status_code, err); }
-            return res.send(200, JSON.stringify({ok: true, user: strip(updatedUser) }));
+
+            // If a user updates their record, we need to update the session data
+            if (req.session.user.name === req.params.name) {
+                req.session.user = user;
+            }
+
+            return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
         });
     });
   });
 
+  // Delete a user
   app.del('/api/user/:name', function(req,res) {
       if (!req.session || !req.session.user) {
-          return res.send(400, JSON.stringify({ok: false, message: "You must be logged in to use this function"}));
+          return res.send(401, JSON.stringify({ok: false, message: "You must be logged in to use this function"}));
       }
+      else if (config.adminRoles && !hasAdminPermission(req.session.user)) {
+          return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
+      }
+
       db.get('org.couchdb.user:' + req.params.name, function(err,user) {
           if (err) { return res.send(err.status_code, err); }
 
           db.destroy(user._id, user._rev, function(err,body) {
               if (err) { return res.send(err.status_code, err); }
+
+              // Admins can delete their own accounts, but this will log them out.
+              if (req.session.user.name !== req.params.name) {
+                  req.session.destroy();
+                  res.clearCookie('AuthSession');
+              }
               return res.send(200,JSON.stringify({ok:true, message: "User '" + req.params.name + "' deleted."}));
           });
       });
   });
 
-  // # user crud api
+  // Create a user
   app.post('/api/user', function(req, res) {
     if (!req.session || !req.session.user) {
-        return res.send(400, JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
+        return res.send(401, JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
+    }
+    else if (config.adminRoles && !hasAdminPermission(req.session.user)) {
+        return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
     }
     req.body.type = 'user';
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, user) {
@@ -321,11 +350,12 @@ module.exports = function(config) {
     });
   });
 
+  // Return a list of users matching one or more roles
   app.get('/api/user', function(req, res) {
     if (!req.session || !req.session.user) {
-        return res.send(400,JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
+        return res.send(401,JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
     }
-    if (!req.query.roles) { return res.send(500, JSON.stringify({ok:false, message: 'Roles are required!'})); }
+    if (!req.query.roles) { return res.send(400, JSON.stringify({ok:false, message: 'Roles are required!'})); }
     var keys = req.query.roles.split(',');
     db.view('user', 'role', {keys: keys}, function(err, body) {
       if (err) { return res.send(err.status_code, err); }
@@ -342,6 +372,29 @@ module.exports = function(config) {
         var returnArray = [];
         array.forEach(function(value) { returnArray.push(only(value, safeUserFields)); });
         return returnArray;
+    }
+
+    function hasAdminPermission(user) {
+        // If admin roles are disabled, then everyone has admin permissions
+        if (!config.adminRoles) { return true; }
+
+        if (user.roles) {
+            for (var i in user.roles) {
+                var role = user.roles[i];
+                if (config.adminRoles instanceof String) {
+                    if (config.adminRoles === role) { return true; }
+                }
+                else if (config.adminRoles instanceof Array) {
+                    if (config.adminRoles.indexOf(role) >= 0) { return true; }
+                }
+                else {
+                    log.error("config.adminRoles must be a String or Array.  Admin checks are disabled until this is fixed.");
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     function validateUserByEmail(email) {
