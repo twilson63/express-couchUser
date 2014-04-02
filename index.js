@@ -51,8 +51,8 @@ module.exports = function(config) {
                 res.send(200, JSON.stringify({ok: true, user: strip(user)}));
             });
         }
-        catch (err) {
-            res.send(err.status_code, err);
+        catch (email_err) {
+            res.send(err.status_code, email_err);
         }
       }
     }
@@ -215,8 +215,8 @@ module.exports = function(config) {
             validateUserByEmail(req.body.email);
             res.send(200,JSON.stringify({ok:true, message: "Verification code sent..."}));
         }
-        catch (err) {
-            res.send(err.status_code, err);
+        catch (validate_err) {
+            res.send(validate_err.status_code, validate_err);
         }
     });
 
