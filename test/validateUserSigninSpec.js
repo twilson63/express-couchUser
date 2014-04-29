@@ -44,7 +44,7 @@ describe('login with validateUser test', function() {
   });
 
     
-  it.only('should return a status code of 403', function(done) {
+  it('should return a status code of 403', function(done) {
     var authResponse = {
       name: 'foo',
       ok: true
@@ -75,7 +75,7 @@ describe('login with validateUser test', function() {
       .expect(403, expectedResult, done);
   });
 
-  it.only('should return a status code of 200', function(done) {
+  it('should return a status code of 200', function(done) {
     var authResponse = {
       name: 'foo',
       ok: true
