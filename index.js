@@ -66,6 +66,7 @@ module.exports = function(config) {
     db.auth(req.body.name, req.body.password, genSession);
 
     function genSession(err, body, headers) {
+      console.log("err:", err);
       if (err) { return res.send(err.status_code, err); }
       db.get('org.couchdb.user:' + body.name, function(err, user) {
         if (err) { return res.send(err.status_code, err); }
@@ -74,17 +75,35 @@ module.exports = function(config) {
             return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
         }
 
-        delete user.salt;
-        req.session.regenerate(function() {
-          req.session.user = user;
-          req.session.save();
+        function generateSession() {
+          req.session.regenerate(function() {
+            req.session.user = user;
+            req.session.save();
 
-          res.writeHead(200, { 'set-cookie': headers['set-cookie']});
-          res.end(JSON.stringify({ok:true, user: strip(user)}));
-        });
+            res.writeHead(200, { 'set-cookie': headers['set-cookie']});
+            res.end(JSON.stringify({ok:true, user: strip(user)}));
+          });
+        }
+        
+        if(config.validateUser) {
+          console.log('here');
+          config.validateUser({req: req, user: user, headers: headers}, function(err) {
+            if(err) {
+              var statusCode = err.statusCode || 401;
+              var message = err.message || 'Invalid User Login';
+              var error = err.error || 'unauthorized';
+              res.send(err.statusCode, JSON.stringify({ ok: false, message: err.message, error: err.error }));
+            } else {
+              generateSession(); 
+            }
+          });
+        } else {
+          console.log("boo");
+          generateSession();
+        }
       });
     }
-  });
+  }); 
 
   // logout user
   // required properties on req.body
