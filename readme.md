@@ -32,7 +32,7 @@ app.configure(function() {
 ```
 The optional adminRoles attribute allows you to specify one or more administrative roles that are allowed to add, update, and delete users.
 
-The optional validateUser allows you to specify extra validation other than user/name password. For example, checking for greater than x number of login attempts. The first argument data is an object that has request, user, and headers fields. The reason the callback pattern is used to pass out the result is that you can do async calls within this function (like check another database, etc).
+The optional validateUser allows you to specify extra validation other than username/password. For example, checking for greater than x number of login attempts. The first argument data is an object that has request, user, and headers fields. The reason the callback pattern is used to pass out the result is that you can do async calls within this function (like check another database, etc).
 
 Example validateUser function.
 
