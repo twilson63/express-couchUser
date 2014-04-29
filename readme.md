@@ -48,7 +48,7 @@ validateUser: function(data, cb) {
     var errorPayload = {
       statusCode: 403,                           //if not included will default to 401 
       message: 'Exceeded fail login attempts',   //if not included will default to 'Invalid User Login'
-      error: 'Forbidden'                         //if not included will 'unauthorized'
+      error: 'Forbidden'                         //if not included will default 'unauthorized'
     }
     cb(errorPayload);
   } else {
