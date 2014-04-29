@@ -6,7 +6,6 @@
 //
 var express = require('express');
 var nano = require('nano');
-var app = express();
 var uuid = require('uuid');
 var emailTemplates = require('email-templates');
 var nodemailer = require('nodemailer');
@@ -15,6 +14,8 @@ var _ = require('underscore');
 var only = require('only');
 
 module.exports = function(config) {
+  var app = express();
+  
   var safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles";
   var db = nano(config.users);
   var transport;  
@@ -63,11 +64,12 @@ module.exports = function(config) {
   // * name
   // * password
   app.post('/api/user/signin', function(req, res) {
+
     db.auth(req.body.name, req.body.password, genSession);
 
     function genSession(err, body, headers) {
-      console.log("err:", err);
       if (err) { return res.send(err.status_code, err); }
+
       db.get('org.couchdb.user:' + body.name, function(err, user) {
         if (err) { return res.send(err.status_code, err); }
 
@@ -86,19 +88,17 @@ module.exports = function(config) {
         }
         
         if(config.validateUser) {
-          console.log('here');
           config.validateUser({req: req, user: user, headers: headers}, function(err) {
             if(err) {
               var statusCode = err.statusCode || 401;
               var message = err.message || 'Invalid User Login';
               var error = err.error || 'unauthorized';
-              res.send(err.statusCode, JSON.stringify({ ok: false, message: err.message, error: err.error }));
+              res.send(err.statusCode, { ok: false, message: err.message, error: err.error });
             } else {
               generateSession(); 
             }
           });
         } else {
-          console.log("boo");
           generateSession();
         }
       });
