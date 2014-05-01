@@ -66,22 +66,17 @@ module.exports = function(config) {
     db.auth(req.body.name, req.body.password, genSession);
 
     function genSession(err, body, headers) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       db.get('org.couchdb.user:' + body.name, function(err, user) {
-        if (err) { return res.send(err.status_code, err); }
+        if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
         if (config.verify && !user.verified) {
             return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
         }
 
         delete user.salt;
-        req.session.regenerate(function() {
-          req.session.user = user;
-          req.session.save();
-
-          res.writeHead(200, { 'set-cookie': headers['set-cookie']});
-          res.end(JSON.stringify({ok:true, user: strip(user)}));
-        });
+        req.session.user = user;
+        res.end(JSON.stringify({ok:true, user: strip(user)}));
       });
     }
   });
@@ -107,7 +102,7 @@ module.exports = function(config) {
     // generate uuid code
     // and save user record
     function saveUser(err, body) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
       if (body.rows && body.rows.length === 0) {
         return res.send(500, JSON.stringify({ ok: false, message: 'No user found with that email.' }));
@@ -121,13 +116,13 @@ module.exports = function(config) {
 
     // initialize the emailTemplate engine
     function createEmail(err, body) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       emailTemplates(config.email.templateDir, renderForgotTemplate);
     }
 
     // render forgot.ejs
     function renderForgotTemplate(err, template) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       // use header host for reset url
       config.app.url = 'http://' + req.headers.host;
       template('forgot', { user: user, app: config.app }, sendEmail);
@@ -135,7 +130,7 @@ module.exports = function(config) {
 
     // send rendered template to user
     function sendEmail(err, html, text) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       if (!transport) { return res.send(500, { error: 'transport is not configured!'}); }
       transport.sendMail({
         from: config.email.from,
@@ -147,7 +142,7 @@ module.exports = function(config) {
 
     // complete action
     function done(err, status) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       res.send(200, JSON.stringify({ ok: true, message: "forgot password link sent..." }));
       //app.emit('user: forgot password', user);
     }
@@ -160,7 +155,7 @@ module.exports = function(config) {
     }
 
     db.view('user', 'code', {key: req.params.code}, function(err, body) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       if (body.rows.length > 1) {
         return res.send(500, JSON.stringify({ ok: false, message: 'More than one user found.'}));
       } else if (body.rows.length === 0) {
@@ -188,7 +183,7 @@ module.exports = function(config) {
       // get user by code
     db.view('user', 'code', { key: req.body.code }, checkCode);
     function checkCode(err, body) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       if (body.rows && body.rows.length === 0) {
         return res.send(500, JSON.stringify({ok: false, message: 'Not Found'}));
       }
@@ -197,7 +192,7 @@ module.exports = function(config) {
       // clear code
       delete user.code;
       db.insert(user, user._id, function(err,user) {
-          if (err) { return res.send(err.status_code, err); }
+          if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
           return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
       });
     }
@@ -234,7 +229,7 @@ module.exports = function(config) {
         db.view('user', 'verification_code', { key: req.params.code }, saveUser);
 
         function saveUser(err, body) {
-            if (err) { return res.send(err.status_code, err); }
+            if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
             if (body.rows && body.rows.length === 0) {
                 return res.send(400, JSON.stringify({ ok: false, message: 'Invalid verification code.' }));
@@ -250,7 +245,7 @@ module.exports = function(config) {
             delete user.verification_code;
             user.verified = new Date();
             db.insert(user, user._id, function(err, body) {
-                if (err) { return res.send(err.status_code, err); }
+                if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
                 return res.send(200,JSON.stringify({ok:true, message: "Account verified."}));
             });
         }
@@ -271,7 +266,7 @@ module.exports = function(config) {
           return res.send(401,JSON.stringify({ok:false, message: "You must be logged in to use this function."}));
       }
       db.get('org.couchdb.user:' + req.params.name, function(err,user) {
-          if (err) { return res.send(err.status_code, err); }
+          if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
           return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
       });
   });
@@ -286,7 +281,7 @@ module.exports = function(config) {
     }
 
       db.get('org.couchdb.user:' + req.params.name, function(err, user) {
-        if (err) { return res.send(err.status_code, err); }
+        if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
         var updates = strip(req.params);
         var keys = Object.keys(updates);
@@ -298,7 +293,7 @@ module.exports = function(config) {
             user[key] = updates[keys];
         }
         db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, updatedUser) {
-            if (err) { return res.send(err.status_code, err); }
+            if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
             // If a user updates their record, we need to update the session data
             if (req.session.user.name === req.params.name) {
@@ -320,10 +315,10 @@ module.exports = function(config) {
       }
 
       db.get('org.couchdb.user:' + req.params.name, function(err,user) {
-          if (err) { return res.send(err.status_code, err); }
+          if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
           db.destroy(user._id, user._rev, function(err,body) {
-              if (err) { return res.send(err.status_code, err); }
+              if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
               // Admins can delete their own accounts, but this will log them out.
               if (req.session.user.name !== req.params.name) {
@@ -345,7 +340,7 @@ module.exports = function(config) {
     }
     req.body.type = 'user';
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, user) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       res.send(200, JSON.stringify({ok: true, user: strip(user)}));
     });
   });
@@ -358,7 +353,7 @@ module.exports = function(config) {
     if (!req.query.roles) { return res.send(400, JSON.stringify({ok:false, message: 'Roles are required!'})); }
     var keys = req.query.roles.split(',');
     db.view('user', 'role', {keys: keys}, function(err, body) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       var users = _(body.rows).pluck('value');
       res.send(200, JSON.stringify({ok: true, users: stripArray(users)}));
     });
