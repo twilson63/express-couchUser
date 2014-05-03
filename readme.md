@@ -24,12 +24,39 @@ app.configure(function() {
     email: {
       ...
     },
-    adminRoles: [ 'admin' ]
+    adminRoles: [ 'admin' ],
+    validateUser: function(data, cb) {...}
   }));
 });
 
 ```
 The optional adminRoles attribute allows you to specify one or more administrative roles that are allowed to add, update, and delete users.
+
+The optional validateUser allows you to specify extra validation other than username/password. For example, checking for greater than x number of login attempts. The first argument data is an object that has request, user, and headers fields. The reason the callback pattern is used to pass out the result is that you can do async calls within this function (like check another database, etc).
+
+Example validateUser function.
+
+``` js
+validateUser: function(data, cb) {
+  var MAX_FAILED_LOGIN = 5;
+  var req = data.req;     //all the fields in data is captured from /api/user/signin callback function
+  var user = data.user;
+  var headers = data.headers;
+
+  if(data.user.failedLogin > MAX_FAILED_LOGIN) {
+    //fails check
+    var errorPayload = {
+      statusCode: 403,                           //if not included will default to 401 
+      message: 'Exceeded fail login attempts',   //if not included will default to 'Invalid User Login'
+      error: 'Forbidden'                         //if not included will default 'unauthorized'
+    }
+    cb(errorPayload);
+  } else {
+    //passess check
+    cb(null);
+  }
+}
+```
 
 ## Initialize CouchDb
 

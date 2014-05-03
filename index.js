@@ -6,7 +6,6 @@
 //
 var express = require('express');
 var nano = require('nano');
-var app = express();
 var uuid = require('uuid');
 var emailTemplates = require('email-templates');
 var nodemailer = require('nodemailer');
@@ -15,6 +14,8 @@ var _ = require('underscore');
 var only = require('only');
 
 module.exports = function(config) {
+  var app = express();
+  
   var safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles";
   var db = nano(config.users);
   var transport;  
@@ -63,10 +64,12 @@ module.exports = function(config) {
   // * name
   // * password
   app.post('/api/user/signin', function(req, res) {
+
     db.auth(req.body.name, req.body.password, genSession);
 
     function genSession(err, body, headers) {
       if (err) { return res.send(err.status_code, err); }
+
       db.get('org.couchdb.user:' + body.name, function(err, user) {
         if (err) { return res.send(err.status_code, err); }
 
@@ -74,17 +77,33 @@ module.exports = function(config) {
             return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
         }
 
-        delete user.salt;
-        req.session.regenerate(function() {
-          req.session.user = user;
-          req.session.save();
+        function generateSession() {
+          req.session.regenerate(function() {
+            req.session.user = user;
+            req.session.save();
 
-          res.writeHead(200, { 'set-cookie': headers['set-cookie']});
-          res.end(JSON.stringify({ok:true, user: strip(user)}));
-        });
+            res.writeHead(200, { 'set-cookie': headers['set-cookie']});
+            res.end(JSON.stringify({ok:true, user: strip(user)}));
+          });
+        }
+        
+        if(config.validateUser) {
+          config.validateUser({req: req, user: user, headers: headers}, function(err) {
+            if(err) {
+              var statusCode = err.statusCode || 401;
+              var message = err.message || 'Invalid User Login';
+              var error = err.error || 'unauthorized';
+              res.send(err.statusCode, { ok: false, message: err.message, error: err.error });
+            } else {
+              generateSession(); 
+            }
+          });
+        } else {
+          generateSession();
+        }
       });
     }
-  });
+  }); 
 
   // logout user
   // required properties on req.body
