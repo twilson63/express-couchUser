@@ -84,30 +84,9 @@ module.exports = function(config) {
             return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
         }
 
-        function generateSession() {
-          req.session.regenerate(function() {
-            req.session.user = user;
-            req.session.save();
-
-            res.writeHead(200, { 'set-cookie': headers['set-cookie']});
-            res.end(JSON.stringify({ok:true, user: strip(user)}));
-          });
-        }
-        
-        if(config.validateUser) {
-          config.validateUser({req: req, user: user, headers: headers}, function(err) {
-            if(err) {
-              var statusCode = err.statusCode || 401;
-              var message = err.message || 'Invalid User Login';
-              var error = err.error || 'unauthorized';
-              res.send(err.statusCode, { ok: false, message: err.message, error: err.error });
-            } else {
-              generateSession(); 
-            }
-          });
-        } else {
-          generateSession();
-        }
+        delete user.salt;
+        req.session.user = user;
+        res.end(JSON.stringify({ok:true, user: strip(user)}));
       });
     }
   }); 
