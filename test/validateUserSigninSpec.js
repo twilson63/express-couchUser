@@ -1,13 +1,13 @@
 var expect = require('expect.js');
+var express = require('express');
+var nock = require('nock');
+var request = require('supertest');
 
 describe('login with validateUser test', function() {
-  var express = require('express');
+
   var user = require('../');
   var userView = require('../lib/user');
-  var couchUrl = process.env.COUCH || 'http://localhost:5984';
-  var nock = require('nock');
-
-  var request = require('supertest');
+  var couchUrl = 'http://localhost:5984';
 
   var config = { 
     couch: couchUrl + '/_user', 
