@@ -6,7 +6,7 @@ var app = express();
 var _ = require('underscore');
 var nock = require('nock');
 var testdb = nock('http://localhost');
-nock.recorder.rec();
+//nock.recorder.rec();
 
 app.use(express.json());
 app.use(user({ 
