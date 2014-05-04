@@ -94,7 +94,7 @@ module.exports = function(config) {
               var statusCode = err.statusCode || 401;
               var message = err.message || 'Invalid User Login';
               var error = err.error || 'unauthorized';
-              res.send(err.statusCode, { ok: false, message: err.message, error: err.error });
+              res.send(statusCode, { ok: false, message: err.message, error: err.error });
             } else {
               setSessionUser(); 
             }
