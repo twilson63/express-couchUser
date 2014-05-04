@@ -339,17 +339,17 @@ module.exports = function(config) {
       }
 
       db.get('org.couchdb.user:' + req.params.name, function(err,user) {
-          if (err) { return res.send(err.status_code, err); }
+          if (err) { console.log("err:", err);return res.send(err.status_code, err); }
 
           db.destroy(user._id, user._rev, function(err,body) {
               if (err) { return res.send(err.status_code, err); }
 
               // Admins can delete their own accounts, but this will log them out.
-              if (req.session.user.name !== req.params.name) {
+              if (req.session.user.name === req.params.name) {
                   req.session.destroy();
                   res.clearCookie('AuthSession');
               }
-              return res.send(200,JSON.stringify({ok:true, message: "User '" + req.params.name + "' deleted."}));
+              return res.send(200,JSON.stringify({ok:true, message: "User " + req.params.name + " deleted."}));
           });
       });
   });

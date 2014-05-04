@@ -26,7 +26,7 @@ describe('User API Tests', function() {
   };
 
   var adminUser = {
-    "name": "admin",
+    "name": "adminUser",
     "password" : "admin",
     "roles": [ "admin" ]
   };
@@ -217,7 +217,7 @@ describe('User API Tests', function() {
           done();
         });
     });  
-    it.only('should return 200 for admin role editing another user', function(done) {
+    it('should return 200 for admin role editing another user', function(done) {
       var mockGet = _.clone(userDoc);
       mockGet = _.extend(mockGet, { _id: 'org.couchdb.user:foo', _rev: '1-234' }); 
       
@@ -282,17 +282,72 @@ describe('User API Tests', function() {
         });
     });
   });
-//  describe('DELETE /api/user/:name', function() {
-//    it('should return user doc', function(done) {
-//      debugger;
-//      request.del('http://localhost:3000/api/user/' + 'user5',
-//        {json: user5},
-//        function(e,r,b) {
-//          debugger;
-//          expect(b.ok).to.be.ok();
-//          done();
-//        });
-//    });
-//  });
+  // describe('DELETE /api/user/:name', function() {
+  //   it('should return a 401', function(done) {
+  //     request(app)
+  //       .del('/api/user/foo')
+  //       .expect(401)
+  //       .end(function(e, r) {
+  //         var obj = JSON.parse(r.text);
+  //         expect(obj.ok).to.eql(false);
+  //         expect(obj.message).to.eql("You must be logged in to use this function");
+  //         done();
+  //       });
+  //   }); 
+  //   it('should return a 403', function(done) {
+  //     request(app)
+  //       .del('/api/user/foo')
+  //       .set('isAdmin', 'false')
+  //       .expect(403)
+  //       .end(function(e, r) {
+  //         var obj = JSON.parse(r.text);
+  //         expect(obj.ok).to.eql(false);
+  //         expect(obj.message).to.eql("You do not have permission to use this function.");
+  //         done();
+  //       });
+  //   });
+  //   it.only('should return a 200', function(done) {
+  //     var mockReply = _.extend(_.clone(userDoc), { _id: 'org.couchdb.user:adminFoo', _rev: '1-234' });
 
+  //     nock('http://localhost:5984:5984')
+  //       .get('/_users/org.couchdb.user%3Afoo')
+  //         .reply(200, JSON.stringify(mockReply))
+  //       .delete('/_users/org.couchdb.user%3AadminFoo?rev=1-234')
+  //         .reply(200, {msg: 'delete success'});
+
+
+  //     request(app)
+  //       .del('/api/user/foo')
+  //       .set('isAdmin', 'true')
+  //       .expect(200)
+  //       .end(function(e, r) {
+  //         var obj = JSON.parse(r.text);
+  //         console.log("r.session:", r.session);
+  //         expect(obj.ok).to.eql(true);
+  //         expect(obj.message).to.eql('User foo deleted.');
+  //         expect(r.session).to.be(defined);
+  //         done();
+  //       });    
+  //   });
+  //   it('should return a 200 and log out adminUser when deleting self', function(done) {
+  //     var mockReply = _.extend(_.clone(adminUser), { _id: 'org.couchdb.user:adminUser', _rev: '1-234' });
+  //     couch
+  //       .get('/_users/org.couchdb.user%3AadminUser')
+  //         .reply(200, JSON.stringify(mockReply))
+  //       .delete('/_users/org.couchdb.user%3AadminUser?rev=1-234')
+  //         .reply(200, { ok: true, msg: 'del success' });
+
+  //     request(app)
+  //       .del('/api/user/adminUser')
+  //       .set('isAdmin', 'true')
+  //       .expect(200)
+  //       .end(function(e, r) {
+  //         var obj = JSON.parse(r.text);
+  //         expect(obj.ok).to.eql(true);
+  //         expect(obj.message).to.eql('User adminUser deleted.');
+  //         expect(r.session).to.be(undefined);
+  //         done();
+  //       });
+  //   });
+  // });
 });
