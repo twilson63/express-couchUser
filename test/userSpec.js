@@ -1,178 +1,354 @@
 var expect = require('expect.js');
 var express = require('express');
-var app = express();
-var user = require('../');
-var userView = require('../lib/user');
-var couchUrl = process.env.COUCH || 'http://localhost:5984';
-var nano = require('nano')(couchUrl);
+var nock = require('nock');
+var request = require('supertest');
+var _ = require('underscore');
 
-var request = require('request');
-var cookieJar = request.jar();
-
-app.use(express.bodyParser());
-app.use(express.cookieParser());
-app.use(express.session({ secret: 'foobar'}));
-app.use(user({ couch: couchUrl + '/user_test', users: couchUrl + '/user_test'}));
-
-var userDoc = {
-  name: 'user',
-  password: 'password',
-  email: 'user@email.com',
-  roles: ['school1']
-};
-
-var adminUser = {
-    "name": "admin",
-    "password" : "admin",
-    "roles": [ "admin" ]
-};
+//nock.recorder.rec();
 
 describe('User API Tests', function() {
-  var db;
-  var server;
-  before(function(done) {
-    server = app.listen(3000, done);
-  });
-  after(function() {
-    server.close();
-  });
+  var user = require('../');
+  var userView = require('../lib/user');
+  var couch_url = 'http://localhost:5984';
+  var couch = nock(couch_url);
+  var config = {
+    users: 'http://localhost:5984/_users',
+    adminRoles: ['admin'],
+    safeUserFields: 'name email roles desc' 
+  };
 
-  before(function(done) {
-    nano.db.create('user_test', setupDb);
-    function setupDb() {
-      db = nano.use('user_test');
-      db.insert(userView, '_design/user', done);
-    }
-  });
+  var userDoc = {
+    name: 'foo',
+    password: 'password',
+    email: 'foo@email.com',
+    roles: ['school1'],
+    desc: 'foo'
+  };
 
-// We have to be logged in as an admin user to execute CRUD calls, so we need to create one.
-   before(function(done) {
-          db.insert(adminUser, 'org.couchdb.user:' + adminUser.name, done);
-   });
+  var adminUser = {
+    "name": "adminUser",
+    "password" : "admin",
+    "roles": [ "admin" ]
+  };
 
-    // We have to be logged in as an admin user to execute CRUD calls, so we need to log in and keep passing those credentials
-   before(function(done) {
-       request.post('http://localhost:3000/api/user/signin', {
-           json: {
-                name: adminUser.name,
-                password: adminUser.password
-           },
-           jar: cookieJar
-       }, function(e,r,b) {
-           expect(e).to.be(null);
-           console.log(JSON.stringify(b),null,"\t");
-           expect(r.statusCode).to.be(200);
-           expect(b.user).not.to.be(undefined);
-           expect(cookieJar.cookies.filter(function(element) { return element.name === "AuthSession"})).not.to.be(undefined);
-           done();
-       });
+  var app;
+  before(function() {
+    app = express();
+    app.configure(function() {
+      app.use(express.bodyParser());
+      app.use(express.cookieParser());
+      app.use(express.session({ secret: 'foobar'}));
+      app.use(function(req, res, next) {
+        //for mocking admin/user login
+        if(req.header('isAdmin') === 'true') {
+          req.session.user = adminUser;
+        } else if(req.header('isAdmin') === 'false') {
+          req.session.user = userDoc;
+        } 
+        next();
+      });
+      app.use(user(config));
     });
-
-  after(function(done) {
-    nano.db.destroy('user_test', done);
   });
 
-//
-//    describe('POST /api/user', function() {
-//        var user;
-//        it('should create new user document', function(done) {
-//            request.post('http://localhost:3000/api/user', {json: userDoc}, function(e,r,b) {
-//                user = b;
-//                expect(b.ok).to.be.ok();
-//                done();
-//            });
-//        });
-//    });
-//    describe('GET /api/user', function() {
-//    var user2;
-//    before(function(done) {
-//      var doc = {
-//        name: 'user2',
-//        password: 'password',
-//        email: 'user@email.com',
-//        roles: ['school1']
-//      };
-//      db.insert(doc, function(err, body) {
-//        user2 = body;
-//        done();
-//      });
-//    });
-//    it('should list all users for a given role(s)', function(done) {
-//      request.get('http://localhost:3000/api/user',
-//        { json:true, qs: {roles: 'school1'}},
-//        function(e,r,b) {
-//          expect(b).to.not.be.empty();
-//          done();
-//        });
-//    });
-//  });
-//    describe('GET /api/user/:name', function() {
-//    it('should return user doc', function(done) {
-//      request.get('http://localhost:3000/api/user/' + adminUser.name,
-//        { jar: cookieJar},
-//        function(e,r,b) {
-//            expect(e).to.be(undefined);
-//            expect(r).to.be(undefined);
-//            expect(b).to.be.an('object');
-//          done();
-//        });
-//    });
-//  });
+  afterEach(function() {
+    nock.cleanAll();
+  });
 
-//    describe('PUT /api/user/:name', function() {
-//    var user4;
-//    before(function(done) {
-//      var doc = {
-//        name: 'user4',
-//        password: 'password',
-//        email: 'user@email.com',
-//        roles: ['school1']
-//      };
-//      db.insert(doc, 'org.couchdb.user:' + doc.name, function(err, body) {
-//        user4 = doc;
-//        user4._id = body.id;
-//        user4._rev = body.rev;
-//        done();
-//      });
-//    });
-//    it('should return user doc', function(done) {
-//      user4.password = 'foo';
-//      request.put('http://localhost:3000/api/user/' + 'user4',
-//        {json: user4},
-//        function(e,r,b) {
-//          expect(b.ok).to.be.ok();
-//          expect(b.rev.split('-')[0]).to.be('2');
-//          done();
-//        });
-//    });
-//  });
-//  describe('DELETE /api/user/:name', function() {
-//    var user5;
-//    before(function(done) {
-//      var doc = {
-//        name: 'user5',
-//        password: 'password',
-//        email: 'user@email.com',
-//        roles: ['school1']
-//      };
-//      db.insert(doc, 'org.couchdb.user:' + doc.name, function(err, body) {
-//        debugger;
-//        user5 = doc;
-//        user5._id = body.id;
-//        user5._rev = body.rev;
-//        done();
-//      });
-//    });
-//    it('should return user doc', function(done) {
-//      debugger;
-//      request.del('http://localhost:3000/api/user/' + 'user5',
-//        {json: user5},
-//        function(e,r,b) {
-//          debugger;
-//          expect(b.ok).to.be.ok();
-//          done();
-//        });
-//    });
-//  });
+  describe('POST /api/user', function() {
+    var user;
+    it('should respond with 401 if user is not logged in', function(done) {
+      request(app)
+        .post('/api/user')
+        .send({ name: 'foo' })
+        .expect(401)
+        .end(function(e, r, b) {
+          var obj = JSON.parse(r.text); 
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql('You must be logged in to use this function');
+          done();
+        });
+    });
+    it('should respond with a 403 if user doesnt have admin role', function(done) {
+      //sign in as not an admin 
+      request(app)
+        .post('/api/user')
+        .set('isAdmin', 'false') //mocking a logged in user that doesn't have admin rights
+        .send({ })
+        .expect(403)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql("You do not have permission to use this function.");
+          done();
+        }); 
+    });
+    it('should respond 200 if logged in as an admin', function(done) {
+      //sign in as admin
+      var addUser = {
+        'name': 'foo',
+        'password': 'foo',
+        'roles': []
+      };
 
+      couch 
+        .put('/_users/org.couchdb.user%3Afoo', {"name":"foo","password":"foo","roles":[],"type":"user"})
+        .reply(201, "{\"ok\":true,\"id\":\"org.couchdb.user:foo\",\"rev\":\"1-d7bf8c9ff7e0060c7d3457536afccf97\"}\n");
+
+      request(app)
+        .post('/api/user')
+        .set('isAdmin', 'true') //mocking logged in user that is admin role
+        .send(addUser)
+        .expect(200)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(true);
+          expect(obj.data.id).to.eql('org.couchdb.user:foo');
+          done();
+        }); 
+    });
+  });
+  describe('GET /api/user', function() {
+    it('should return a 401 for not being logged in', function(done) {
+      request(app)
+        .get('/api/user')
+        .send({ name: 'foo' })
+        .expect(401)
+        .end(function(e, r, b) {
+          var obj = JSON.parse(r.text); 
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql('You must be logged in to use this function');
+          done();
+        });
+    });
+    it('should return a 400 when query has no roles', function(done) {
+      request(app)
+        .get('/api/user')
+        .set('isAdmin', 'false') //mocking a logged in user that doesn't have admin rights
+        .send({ })
+        .expect(403)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql('Roles are required!');
+          done();
+        }); 
+    });
+    it('should return a 200 for getting users by roles', function(done) {
+      var mockCouchReply = {
+        rows: [
+          { value: { name: 'student1' } },
+          { value: { name: 'student2' } }
+        ]
+      }
+      couch
+        .post('/_users/_design/user/_view/role', { "keys":["student"] })
+        .reply(200, JSON.stringify(mockCouchReply));
+
+      request(app)
+        .get('/api/user?roles=student')
+        .set('isAdmin', 'false')
+        .expect(200)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(true);
+          expect(obj.users).to.eql([{ name: 'student1' }, { name: 'student2' }]);
+          done();
+        });
+    });
+  });
+  describe('GET /api/user/:name', function() {
+    it('should return a 401 for not being logged in', function(done) {
+      request(app)
+        .get('/api/user')
+        .send({ name: 'foo' })
+        .expect(401)
+        .end(function(e, r, b) {
+          var obj = JSON.parse(r.text); 
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql('You must be logged in to use this function');
+          done();
+        });
+    });
+    it('should return a user doc', function(done) {
+      var userFoo = {
+        name: 'foo'
+      };
+      couch
+        .get('/_users/org.couchdb.user%3Afoo')
+        .reply(200, userFoo);
+
+      request(app)
+        .get('/api/user/foo')
+        .set('isAdmin', 'false')
+        .expect(200)
+        .end(function(e, r, b) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(true);
+          expect(obj.user.name).to.eql('foo');
+          done();
+        });
+    });
+  });
+
+  describe('PUT /api/user/:name', function() {
+    it('should return a 401', function(done) {
+      request(app)
+        .put('/api/user/foo')
+        .send({ name: 'foo' })
+        .expect(401)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text); 
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql('You must be logged in to use this function');
+          done();
+        });
+    }) 
+    it('should return a 403', function(done) {
+      request(app)
+        .put('/api/user/bar')
+        .send({ name: 'foo' , desc: 'fooey' })
+        .set('isAdmin', 'false') 
+        .expect(403)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql('You do not have permission to use this function.');
+          done();
+        });
+    });  
+    it('should return 200 for admin role editing another user', function(done) {
+      var mockGet = _.clone(userDoc);
+      mockGet = _.extend(mockGet, { _id: 'org.couchdb.user:foo', _rev: '1-234' }); 
+      
+      var mockPut = {
+        name: 'foo',
+        password: 'password',
+        email: 'foo@email.com',
+        roles: ['Admin'],
+        desc: 'fooey',
+        _id: 'org.couchdb.user:foo',
+        _rev: '1-234'
+      };
+      couch
+        .get('/_users/org.couchdb.user%3Afoo')
+          .reply(200, JSON.stringify(mockGet))
+        .put('/_users/org.couchdb.user%3Afoo', JSON.stringify(mockPut))
+          .reply(200, JSON.stringify({ ok: true, id: 'org.couchdb.user:foo', rev: '2-234' }));
+
+      request(app)
+        .put('/api/user/foo')
+        .send({ name: 'foo', desc: 'fooey', roles: ['Admin'] })
+        .set('isAdmin', 'true')
+        .expect(200)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(true);
+          expect(obj.user.roles).to.eql(['Admin']);
+          expect(obj.user.desc).to.eql('fooey');
+          done();
+        });   
+    });
+    it('should return 200 for user editing his own user doc, but should not update roles array', function(done) {
+      var mockGet = _.clone(userDoc);
+      mockGet = _.extend(mockGet, { _id: 'org.couchdb.user:foo', _rev: '1-234' });
+
+      var mockPut = {
+        name: 'foo',
+        password: 'password',
+        email: 'foo@email.com',
+        roles: ['school1'],
+        desc: 'fooey',
+        _id: 'org.couchdb.user:foo',
+        _rev: '1-234'
+      };
+      couch
+        .get('/_users/org.couchdb.user%3Afoo')
+          .reply(200, JSON.stringify(mockGet))
+        .put('/_users/org.couchdb.user%3Afoo', JSON.stringify(mockPut))
+          .reply(200, JSON.stringify({ ok: true, id: 'org.couchdb.user:foo', rev: '2-234' }));
+
+      request(app)
+        .put('/api/user/foo')
+        .set('isAdmin', 'false')
+        .send({ name: 'foo', desc: 'fooey', roles: ['Admin', 'school1'] })
+        .expect(200)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(true);
+          expect(obj.user.desc).to.eql('fooey');
+          expect(obj.user.roles).to.eql(['school1']);
+          done();
+        });
+    });
+  });
+  describe('DELETE /api/user/:name', function() {
+    it('should return a 401', function(done) {
+      request(app)
+        .del('/api/user/foo')
+        .expect(401)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql("You must be logged in to use this function");
+          done();
+        });
+    }); 
+    it('should return a 403', function(done) {
+      request(app)
+        .del('/api/user/foo')
+        .set('isAdmin', 'false')
+        .expect(403)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(false);
+          expect(obj.message).to.eql("You do not have permission to use this function.");
+          done();
+        });
+    });
+    it('should return a 200', function(done) {
+      var mockReply = _.extend(_.clone(userDoc), { _id: 'org.couchdb.user:adminFoo', _rev: '1-234' });
+
+      nock('http://localhost:5984:5984')
+        .get('/_users/org.couchdb.user%3Afoo')
+          .reply(200, JSON.stringify(mockReply))
+        .delete('/_users/org.couchdb.user%3AadminFoo?rev=1-234')
+          .reply(200, {msg: 'delete success'});
+
+
+      request(app)
+        .del('/api/user/foo')
+        .set('isAdmin', 'true')
+        .expect(200)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(true);
+          expect(obj.message).to.eql('User foo deleted.');
+          done();
+        });    
+
+    });
+    it('should return a 200 and log out adminUser when deleting self', function(done) {
+      var mockReply = _.extend(_.clone(adminUser), { _id: 'org.couchdb.user:adminUser', _rev: '1-234' });
+      couch
+        .get('/_users/org.couchdb.user%3AadminUser')
+          .reply(200, JSON.stringify(mockReply))
+        .delete('/_users/org.couchdb.user%3AadminUser?rev=1-234')
+          .reply(200, { ok: true, msg: 'del success' });
+
+      request(app)
+        .del('/api/user/adminUser')
+        .set('isAdmin', 'true')
+        .expect(200)
+        .end(function(e, r) {
+          var obj = JSON.parse(r.text);
+          expect(obj.ok).to.eql(true);
+          expect(obj.message).to.eql('User adminUser deleted.');
+          //find a better way to see if admins deleting user account is logged out.
+          expect(r.headers['set-cookie'][0].indexOf('AuthSession=;')).to.be(0);
+          done();
+        });
+
+    });
+  });
 });

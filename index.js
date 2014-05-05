@@ -15,7 +15,6 @@ var only = require('only');
 
 module.exports = function(config) {
   var app = express();
-  
   var safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles";
   var db = nano(config.users);
   var transport;  
@@ -94,7 +93,7 @@ module.exports = function(config) {
               var statusCode = err.statusCode || 401;
               var message = err.message || 'Invalid User Login';
               var error = err.error || 'unauthorized';
-              res.send(statusCode, { ok: false, message: err.message, error: err.error });
+              res.send(statusCode, { ok: false, message: message, error: error });
             } else {
               setSessionUser(); 
             }
@@ -281,13 +280,13 @@ module.exports = function(config) {
     });
 
     // Return the name of the currently logged in user.
-    app.get('/api/user/current', function(req, res) {
-        if (!req.session || !req.session.user) {
-            return res.send(401,JSON.stringify({ok:false, message: "Not currently logged in."}));
-        }
+  app.get('/api/user/current', function(req, res) {
+      if (!req.session || !req.session.user) {
+          return res.send(401,JSON.stringify({ok:false, message: "Not currently logged in."}));
+      }
 
-        res.send(200, JSON.stringify({ok: true, user: strip(req.session.user)}));
-    });
+      res.send(200, JSON.stringify({ok: true, user: strip(req.session.user)}));
+  });
 
   // Look up another user's information
   app.get('/api/user/:name', function(req, res) {
@@ -311,18 +310,20 @@ module.exports = function(config) {
     }
 
       db.get('org.couchdb.user:' + req.params.name, function(err, user) {
-        if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+        if (err) { return res.send( err.status_code ? err.status_code : 500, err); }
+        var updates = strip(req.body);
 
-        var updates = strip(req.params);
         var keys = Object.keys(updates);
         for (var i in keys) {
             var key = keys[i];
             if (key === "roles" && !hasAdminPermission(req.session.user)) {
-                log.warn("Stripped updated role information, non-admin users are not allowed to change roles.");
+                console.log("Stripped updated role information, non-admin users are not allowed to change roles.");
+            } else {
+              user[key] = updates[key];
             }
-            user[key] = updates[keys];
         }
-        db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, updatedUser) {
+
+        db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, data) {
             if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
             // If a user updates their record, we need to update the session data
@@ -351,11 +352,11 @@ module.exports = function(config) {
               if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
               // Admins can delete their own accounts, but this will log them out.
-              if (req.session.user.name !== req.params.name) {
+              if (req.session.user.name === req.params.name) {
                   req.session.destroy();
                   res.clearCookie('AuthSession');
               }
-              return res.send(200,JSON.stringify({ok:true, message: "User '" + req.params.name + "' deleted."}));
+              return res.send(200,JSON.stringify({ok:true, message: "User " + req.params.name + " deleted."}));
           });
       });
   });
@@ -369,9 +370,9 @@ module.exports = function(config) {
         return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
     }
     req.body.type = 'user';
-    db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, user) {
-      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-      res.send(200, JSON.stringify({ok: true, user: strip(user)}));
+    db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, data) {
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); } 
+      res.send(200, JSON.stringify({ok: true, data: data}));
     });
   });
 
@@ -413,7 +414,7 @@ module.exports = function(config) {
                     if (config.adminRoles.indexOf(role) >= 0) { return true; }
                 }
                 else {
-                    log.error("config.adminRoles must be a String or Array.  Admin checks are disabled until this is fixed.");
+                    console.log("config.adminRoles must be a String or Array.  Admin checks are disabled until this is fixed.");
                     return true;
                 }
             }
