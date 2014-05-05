@@ -1,6 +1,6 @@
 {
   "name": "express-user-couchdb",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "An express app module connected to couchdb _users table",
   "main": "index.js",
   "scripts": {
@@ -48,6 +48,7 @@
     "grunt-bump": "0.0.11",
     "nock": "^0.28.3",
     "supertest": "^0.11.0",
-    "grunt-mocha-test": "^0.10.2"
+    "grunt-mocha-test": "^0.10.2",
+    "tap": "^0.4.9"
   }
 }
