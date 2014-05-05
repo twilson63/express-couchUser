@@ -342,7 +342,6 @@ describe('User API Tests', function() {
         .expect(200)
         .end(function(e, r) {
           var obj = JSON.parse(r.text);
-          console.log("r.headers:", r.headers);
           expect(obj.ok).to.eql(true);
           expect(obj.message).to.eql('User adminUser deleted.');
           //find a better way to see if admins deleting user account is logged out.
