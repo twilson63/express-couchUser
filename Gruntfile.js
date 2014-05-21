@@ -2,6 +2,7 @@ var path = require('path');
 var src = path.join(__dirname, 'index.js');
 module.exports = function(grunt) {
   grunt.initConfig({
+    clean: ['coverage'],
     jshint: {
       files: src
     },
@@ -43,14 +44,27 @@ module.exports = function(grunt) {
         pushTo: 'origin',
         gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d' // options to use with '$ git describe'
       }
+    },
+    mocha_istanbul: {
+      coverage: {
+        src: 'test',
+        options: {  
+          coverageFolder: '/coverage',
+          mask: '*Spec.js',
+          reportFormats: ['html']
+        }
+      }
     }
   });
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-mocha-istanbul')
   
   grunt.registerTask('default', ['jshint']);
+  grunt.registerTask('testCoverage', ['clean', 'mocha_istanbul:coverage']);
 
 }
 
