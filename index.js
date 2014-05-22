@@ -331,13 +331,13 @@ app.get('/api/user/code/:code', function(req, res) {
       db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, data) {
         if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
-            // If a user updates their record, we need to update the session data
-            if (req.session.user.name === req.params.name) {
-              req.session.user = user;
-            }
+        // If a user updates their record, we need to update the session data
+        if (req.session.user.name === req.params.name) {
+          req.session.user = strip(user);
+        }
 
-            return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
-          });
+        return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
+      });
     });
   });
 
