@@ -321,9 +321,9 @@ describe('User API Tests', function() {
           .end(function(e, r) {
             expect(captureSession.after.desc).to.eql('fooey');
             expect(captureSession.before.desc).not.to.eql(captureSession.after.desc);
-            expect(captureSession.salt).to.not.be.ok();
-            expect(captureSession.password_sha).to.not.be.ok();
-            expect(captureSession.derived_key).to.not.be.ok();
+            expect(captureSession.after.salt).to.not.be.ok();
+            expect(captureSession.after.password_sha).to.not.be.ok();
+            expect(captureSession.after.derived_key).to.not.be.ok();
             done();
           });
       }
