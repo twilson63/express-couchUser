@@ -31,6 +31,8 @@ describe('User API Tests', function() {
     "roles": [ "admin" ]
   };
 
+  var captureSession = {};
+
   var app;
   before(function() {
     app = express();
@@ -41,11 +43,26 @@ describe('User API Tests', function() {
       app.use(function(req, res, next) {
         //for mocking admin/user login
         if(req.header('isAdmin') === 'true') {
-          req.session.user = adminUser;
+          req.session.regenerate(function() {
+            req.session.user = adminUser;
+            next();
+          });
         } else if(req.header('isAdmin') === 'false') {
-          req.session.user = userDoc;
-        } 
-        next();
+          req.session.regenerate(function() {
+            req.session.user = userDoc;
+            next();
+          });
+        } else {
+          next();
+        }
+      });
+      app.use('/captureSessionBefore', function(req, res) {
+        captureSession.before = req.session.user;
+        res.send(200); 
+      });
+      app.use('/captureSessionAfter', function(req, res) {
+        captureSession.after = req.session.user;
+        res.send(200);
       });
       app.use(user(config));
     });
@@ -251,7 +268,13 @@ describe('User API Tests', function() {
     });
     it('should return 200 for user editing his own user doc, but should not update roles array', function(done) {
       var mockGet = _.clone(userDoc);
-      mockGet = _.extend(mockGet, { _id: 'org.couchdb.user:foo', _rev: '1-234' });
+      mockGet = _.extend(mockGet, { 
+        _id: 'org.couchdb.user:foo', 
+        _rev: '1-234', 
+        salt: 'salt',
+        password_sha: 'sha',
+        derived_key: 'dk'
+      });
 
       var mockPut = {
         name: 'foo',
@@ -260,7 +283,10 @@ describe('User API Tests', function() {
         roles: ['school1'],
         desc: 'fooey',
         _id: 'org.couchdb.user:foo',
-        _rev: '1-234'
+        _rev: '1-234',
+        salt: 'salt',
+        password_sha: 'sha',
+        derived_key: 'dk'
       };
       couch
         .get('/_users/org.couchdb.user%3Afoo')
@@ -268,20 +294,50 @@ describe('User API Tests', function() {
         .put('/_users/org.couchdb.user%3Afoo', JSON.stringify(mockPut))
           .reply(200, JSON.stringify({ ok: true, id: 'org.couchdb.user:foo', rev: '2-234' }));
 
+      function callUpdate(cookie) {
+        request(app)
+          .put('/api/user/foo')
+          .set('Cookie', cookie)
+          .send({ name: 'foo', desc: 'fooey', roles: ['Admin', 'school1'] })
+          .expect(200)
+          .end(function(e, r) {
+            var obj = JSON.parse(r.text);
+            expect(obj.ok).to.eql(true);
+            expect(obj.user.desc).to.eql('fooey');
+            expect(obj.user.roles).to.eql(['school1']);
+            expect(obj.user.salt).to.not.be.ok();
+            expect(obj.user.password_sha).to.not.be.ok();
+            expect(obj.derived_key).to.not.be.ok();
+            callSessionAfter(cookie); 
+          });
+      }
+
+      function callSessionAfter(cookie) {
+        //makes sure session got updated
+        request(app)
+          .get('/captureSessionAfter')
+          .set('Cookie', cookie)
+          .expect(200)
+          .end(function(e, r) {
+            expect(captureSession.after.desc).to.eql('fooey');
+            expect(captureSession.before.desc).not.to.eql(captureSession.after.desc);
+            expect(captureSession.after.salt).to.not.be.ok();
+            expect(captureSession.after.password_sha).to.not.be.ok();
+            expect(captureSession.after.derived_key).to.not.be.ok();
+            done();
+          });
+      }
+
       request(app)
-        .put('/api/user/foo')
-        .set('isAdmin', 'false')
-        .send({ name: 'foo', desc: 'fooey', roles: ['Admin', 'school1'] })
+        .get('/captureSessionBefore')
+        .set('isAdmin', false)
         .expect(200)
         .end(function(e, r) {
-          var obj = JSON.parse(r.text);
-          expect(obj.ok).to.eql(true);
-          expect(obj.user.desc).to.eql('fooey');
-          expect(obj.user.roles).to.eql(['school1']);
-          done();
+          callUpdate(r.headers['set-cookie'][0]);
         });
     });
   });
+
   describe('DELETE /api/user/:name', function() {
     it('should return a 401', function(done) {
       request(app)
@@ -336,17 +392,37 @@ describe('User API Tests', function() {
         .delete('/_users/org.couchdb.user%3AadminUser?rev=1-234')
           .reply(200, { ok: true, msg: 'del success' });
 
+      function makeDeleteCall(cookie) {
+        request(app)
+          .del('/api/user/adminUser')
+          .set('Cookie', cookie)
+          .expect(200)
+          .end(function(e, r) {
+            var obj = JSON.parse(r.text);
+            expect(obj.ok).to.eql(true);
+            expect(obj.message).to.eql('User adminUser deleted.');
+            callSessionAfter(r.headers['set-cookie'][0]); 
+          });
+      }
+
+      function callSessionAfter(cookie) {
+        request(app)
+          .get('/captureSessionAfter')
+          .set('Cookie', cookie)
+          .expect(200)
+          .end(function(e, r) {
+            expect(captureSession.before).to.not.eql(captureSession.after);
+            expect(captureSession.after).to.not.be.ok();
+            done();
+          });
+      }
+
       request(app)
-        .del('/api/user/adminUser')
+        .get('/captureSessionBefore')
         .set('isAdmin', 'true')
         .expect(200)
         .end(function(e, r) {
-          var obj = JSON.parse(r.text);
-          expect(obj.ok).to.eql(true);
-          expect(obj.message).to.eql('User adminUser deleted.');
-          //find a better way to see if admins deleting user account is logged out.
-          expect(r.headers['set-cookie'][0].indexOf('AuthSession=;')).to.be(0);
-          done();
+          makeDeleteCall(r.headers['set-cookie'][0]);
         });
 
     });
