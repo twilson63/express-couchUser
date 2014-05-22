@@ -1,5 +1,7 @@
 # express-user-couchdb - ExpressCouchDb Module
 
+[![Build Status](https://secure.travis-ci.org/twilson63/express-couchUser.png)](http://travis-ci.org/twilson63/express-couchUser)
+
 This module is a authentication lib built on top of couch's user model.
 
 ## requirements
