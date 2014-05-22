@@ -5,7 +5,7 @@ var user = require('../');
 var userView = require('../lib/user');
 var couchUrl = process.env.COUCH || 'http://localhost:5984';
 var nano = require('nano')(couchUrl);
-var nock = require('nock')
+var nock = require('nock');
 var request = require('supertest');
 
 //nock.recorder.rec();

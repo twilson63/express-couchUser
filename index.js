@@ -59,6 +59,8 @@ module.exports = function(config) {
         catch (email_err) {
           res.send(err.status_code, email_err);
         }
+      } else {
+        res.send(200, JSON.stringify( _.extend(req.body, {_rev: body.rev, ok: true} ) ));
       }
     }
   });
@@ -79,7 +81,7 @@ module.exports = function(config) {
       db.get('org.couchdb.user:' + body.name, function(err, user) {
 
         if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-        
+
         if (config.verify && !user.verified) {
           return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
         }
