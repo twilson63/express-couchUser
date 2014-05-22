@@ -36,7 +36,7 @@ module.exports = function(config) {
   // your user registration object
   app.post('/api/user/signup', function(req, res) {
     if (!req.body || !req.body.name || !req.body.password || !req.body.email) {
-        return res.send(400, JSON.stringify({ok: false, message: 'A name, password, and email address are required.'}));
+      return res.send(400, JSON.stringify({ok: false, message: 'A name, password, and email address are required.'}));
     }
 
     if (req.body.confirm_password) delete req.body.confirm_password;
@@ -50,15 +50,17 @@ module.exports = function(config) {
 
       if (config.verify) {
         try {
-            validateUserByEmail(req.body.email);
-            db.get(body._id, function(err,user) {
-                if (err) { return res.send(err.status_code, err); }
-                res.send(200, JSON.stringify({ok: true, user: strip(user)}));
-            });
+          validateUserByEmail(req.body.email);
+          db.get(body._id, function(err,user) {
+            if (err) { return res.send(err.status_code, err); }
+            res.send(200, JSON.stringify({ok: true, user: strip(user)}));
+          });
         }
         catch (email_err) {
-            res.send(err.status_code, email_err);
+          res.send(err.status_code, email_err);
         }
+      } else {
+        res.send(200, JSON.stringify( _.extend(req.body, {_rev: body.rev, ok: true} ) ));
       }
     }
   });
@@ -69,7 +71,7 @@ module.exports = function(config) {
   // * password
   app.post('/api/user/signin', function(req, res) {
     if (!req.body || !req.body.name || !req.body.password) {
-        return res.send(400, JSON.stringify({ok: false, message: 'A name, and password are required.'}));
+      return res.send(400, JSON.stringify({ok: false, message: 'A name, and password are required.'}));
     }
 
     db.auth(req.body.name, req.body.password, genSession);
@@ -77,15 +79,18 @@ module.exports = function(config) {
     function genSession(err, body, headers) {
       if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       db.get('org.couchdb.user:' + body.name, function(err, user) {
+
         if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
         if (config.verify && !user.verified) {
-            return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
+          return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
         }
 
         function setSessionUser() {
-          req.session.user = user;
-          res.end(JSON.stringify({ok:true, user: strip(user)}));
+          req.session.regenerate(function() {
+            req.session.user = user;
+            res.end(JSON.stringify({ok:true, user: strip(user)}));
+          });
         }
         if(config.validateUser) {
           config.validateUser({req: req, user: user, headers: headers}, function(err) {
@@ -102,15 +107,15 @@ module.exports = function(config) {
           setSessionUser();
         }
       });
-    }
-  }); 
+}
+}); 
 
   // logout user
   // required properties on req.body
   // * name
   app.post('/api/user/signout', function(req, res) {
     req.session.destroy();
-    res.clearCookie('AuthSession');
+    //res.clearCookie('AuthSession');
     res.send(200,JSON.stringify({ok: true, message: "You have successfully logged out."}));
   });
 
@@ -126,7 +131,7 @@ module.exports = function(config) {
     var user;
     // use email address to find user
     db.view('user', 'all', { key: req.body.email }, saveUser);
-
+    
     // generate uuid code
     // and save user record
     function saveUser(err, body) {
@@ -177,51 +182,51 @@ module.exports = function(config) {
   });
 
 
-  app.get('/api/user/code/:code', function(req, res) {
-    if (!req.params.code) {
-      return res.send(500, JSON.stringify({ok: false, message: 'You must provide a code parameter.'}));
-    }
+app.get('/api/user/code/:code', function(req, res) {
+  if (!req.params.code) {
+    return res.send(500, JSON.stringify({ok: false, message: 'You must provide a code parameter.'}));
+  }
 
-    db.view('user', 'code', {key: req.params.code}, function(err, body) {
-      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-      if (body.rows.length > 1) {
-        return res.send(500, JSON.stringify({ ok: false, message: 'More than one user found.'}));
-      } else if (body.rows.length === 0) {
-        return res.send(500, JSON.stringify({ok: false, message: 'Reset code is not valid.'}));
-      } else {
-        var user = body.rows[0].value;
-        var name = user.name;
-        if (user.fname && user.lname) {
-          name = user.fname + ' ' + user.lname;
-        }
-        return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
+  db.view('user', 'code', {key: req.params.code}, function(err, body) {
+    if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+    if (body.rows.length > 1) {
+      return res.send(500, JSON.stringify({ ok: false, message: 'More than one user found.'}));
+    } else if (body.rows.length === 0) {
+      return res.send(500, JSON.stringify({ok: false, message: 'Reset code is not valid.'}));
+    } else {
+      var user = body.rows[0].value;
+      var name = user.name;
+      if (user.fname && user.lname) {
+        name = user.fname + ' ' + user.lname;
       }
-    });
+      return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
+    }
   });
+});
 
     // reset user password
     // required properties on req.body
     // * code (generated by /api/user/forgot)
     // * password
-  app.post('/api/user/reset', function(req, res) {
-    if (!req.body || !req.body.code || !req.body.password) {
+    app.post('/api/user/reset', function(req, res) {
+      if (!req.body || !req.body.code || !req.body.password) {
         return res.send(400, JSON.stringify({ok: false, message: 'A password and valid password reset code are required.'}));
-    }
+      }
 
       // get user by code
-    db.view('user', 'code', { key: req.body.code }, checkCode);
-    function checkCode(err, body) {
-      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-      if (body.rows && body.rows.length === 0) {
-        return res.send(500, JSON.stringify({ok: false, message: 'Not Found'}));
-      }
-      var user = body.rows[0].value;
-      user.password = req.body.password;
+      db.view('user', 'code', { key: req.body.code }, checkCode);
+      function checkCode(err, body) {
+        if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+        if (body.rows && body.rows.length === 0) {
+          return res.send(500, JSON.stringify({ok: false, message: 'Not Found'}));
+        }
+        var user = body.rows[0].value;
+        user.password = req.body.password;
       // clear code
       delete user.code;
       db.insert(user, user._id, function(err,user) {
-          if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-          return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
+        if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+        return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
       });
     }
   });
@@ -230,17 +235,17 @@ module.exports = function(config) {
     // required properties on req.body
     // * email
     app.post('/api/user/verify', function(req, res) {
-        if (!req.body || !req.body.email) {
-            return res.send(400, JSON.stringify({ok: false, message: 'An email address must be passed as part of the query string before a verification code can be sent.'}));
-        }
+      if (!req.body || !req.body.email) {
+        return res.send(400, JSON.stringify({ok: false, message: 'An email address must be passed as part of the query string before a verification code can be sent.'}));
+      }
 
-        try {
-            validateUserByEmail(req.body.email);
-            res.send(200,JSON.stringify({ok:true, message: "Verification code sent..."}));
-        }
-        catch (validate_err) {
-            res.send(validate_err.status_code, validate_err);
-        }
+      try {
+        validateUserByEmail(req.body.email);
+        res.send(200,JSON.stringify({ok:true, message: "Verification code sent..."}));
+      }
+      catch (validate_err) {
+        res.send(validate_err.status_code, validate_err);
+      }
     });
 
 
@@ -248,126 +253,126 @@ module.exports = function(config) {
     // required properties on req.params
     // * code
     app.get('/api/user/verify/:code', function(req,res) {
-        if (!req.params.code) {
-            return res.send(400, JSON.stringify({ok: false, message: 'A verification code is required.'}));
-        }
+      if (!req.params.code) {
+        return res.send(400, JSON.stringify({ok: false, message: 'A verification code is required.'}));
+      }
 
-        var user;
+      var user;
         // use verification code
         db.view('user', 'verification_code', { key: req.params.code }, saveUser);
 
         function saveUser(err, body) {
-            if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+          if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
-            if (body.rows && body.rows.length === 0) {
-                return res.send(400, JSON.stringify({ ok: false, message: 'Invalid verification code.' }));
-            }
+          if (body.rows && body.rows.length === 0) {
+            return res.send(400, JSON.stringify({ ok: false, message: 'Invalid verification code.' }));
+          }
 
             // TODO:  Add an expiration date for the verification code and check it.
 
             user = body.rows[0].value;
             if (!user.verification_code || user.verification_code !== req.params.code) {
-                return res.send(400, JSON.stringify({ ok: false, message: 'The verification code you attempted to use does not match our records.' }));
+              return res.send(400, JSON.stringify({ ok: false, message: 'The verification code you attempted to use does not match our records.' }));
             }
 
             delete user.verification_code;
             user.verified = new Date();
             db.insert(user, user._id, function(err, body) {
-                if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-                return res.send(200,JSON.stringify({ok:true, message: "Account verified."}));
+              if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+              return res.send(200,JSON.stringify({ok:true, message: "Account verified."}));
             });
-        }
-    });
+          }
+        });
 
     // Return the name of the currently logged in user.
-  app.get('/api/user/current', function(req, res) {
+    app.get('/api/user/current', function(req, res) {
       if (!req.session || !req.session.user) {
-          return res.send(401,JSON.stringify({ok:false, message: "Not currently logged in."}));
+        return res.send(401,JSON.stringify({ok:false, message: "Not currently logged in."}));
       }
 
       res.send(200, JSON.stringify({ok: true, user: strip(req.session.user)}));
-  });
+    });
 
   // Look up another user's information
   app.get('/api/user/:name', function(req, res) {
-      if (!req.session || !req.session.user) {
-          return res.send(401,JSON.stringify({ok:false, message: "You must be logged in to use this function."}));
-      }
+    if (!req.session || !req.session.user) {
+      return res.send(401,JSON.stringify({ok:false, message: "You must be logged in to use this function."}));
+    }
 
-      db.get('org.couchdb.user:' + req.params.name, function(err,user) {
-          if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-          return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
-      });
+    db.get('org.couchdb.user:' + req.params.name, function(err,user) {
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+      return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
+    });
   });
 
   // Create a new user or update an existing user
   app.put('/api/user/:name', function(req, res) {
     if (!req.session || !req.session.user) {
-        return res.send(401,JSON.stringify({ ok:false, message: "You must be logged in to use this function"}));
+      return res.send(401,JSON.stringify({ ok:false, message: "You must be logged in to use this function"}));
     }
     else if (config.adminRoles && !hasAdminPermission(req.session.user) && req.session.user.name !== req.params.name) {
-        return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
+      return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
     }
 
-      db.get('org.couchdb.user:' + req.params.name, function(err, user) {
-        if (err) { return res.send( err.status_code ? err.status_code : 500, err); }
-        var updates = strip(req.body);
+    db.get('org.couchdb.user:' + req.params.name, function(err, user) {
+      if (err) { return res.send( err.status_code ? err.status_code : 500, err); }
+      var updates = strip(req.body);
 
-        var keys = Object.keys(updates);
-        for (var i in keys) {
-            var key = keys[i];
-            if (key === "roles" && !hasAdminPermission(req.session.user)) {
-                console.log("Stripped updated role information, non-admin users are not allowed to change roles.");
-            } else {
-              user[key] = updates[key];
-            }
+      var keys = Object.keys(updates);
+      for (var i in keys) {
+        var key = keys[i];
+        if (key === "roles" && !hasAdminPermission(req.session.user)) {
+          console.log("Stripped updated role information, non-admin users are not allowed to change roles.");
+        } else {
+          user[key] = updates[key];
+        }
+      }
+
+      db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, data) {
+        if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+
+        // If a user updates their record, we need to update the session data
+        if (req.session.user.name === req.params.name) {
+          req.session.user = strip(user);
         }
 
-        db.insert(user, 'org.couchdb.user:' + req.params.name, function(err, data) {
-            if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-
-            // If a user updates their record, we need to update the session data
-            if (req.session.user.name === req.params.name) {
-                req.session.user = strip(user);
-            }
-
-            return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
-        });
+        return res.send(200, JSON.stringify({ok: true, user: strip(user) }));
+      });
     });
   });
 
   // Delete a user
   app.del('/api/user/:name', function(req,res) {
-      if (!req.session || !req.session.user) {
-          return res.send(401, JSON.stringify({ok: false, message: "You must be logged in to use this function"}));
-      }
-      else if (config.adminRoles && !hasAdminPermission(req.session.user)) {
-          return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
-      }
+    if (!req.session || !req.session.user) {
+      return res.send(401, JSON.stringify({ok: false, message: "You must be logged in to use this function"}));
+    }
+    else if (config.adminRoles && !hasAdminPermission(req.session.user)) {
+      return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
+    }
 
-      db.get('org.couchdb.user:' + req.params.name, function(err,user) {
-          if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+    db.get('org.couchdb.user:' + req.params.name, function(err,user) {
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
-          db.destroy(user._id, user._rev, function(err,body) {
-              if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+      db.destroy(user._id, user._rev, function(err,body) {
+        if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
               // Admins can delete their own accounts, but this will log them out.
               if (req.session.user.name === req.params.name) {
-                  req.session.destroy();
-                  res.clearCookie('AuthSession');
+                req.session.destroy();
+                res.clearCookie('AuthSession');
               }
               return res.send(200,JSON.stringify({ok:true, message: "User " + req.params.name + " deleted."}));
-          });
-      });
+            });
+    });
   });
 
   // Create a user
   app.post('/api/user', function(req, res) {
     if (!req.session || !req.session.user) {
-        return res.send(401, JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
+      return res.send(401, JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
     }
     else if (config.adminRoles && !hasAdminPermission(req.session.user)) {
-        return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
+      return res.send(403,JSON.stringify({ok:false, message: "You do not have permission to use this function."}));
     }
     req.body.type = 'user';
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, data) {
@@ -379,7 +384,7 @@ module.exports = function(config) {
   // Return a list of users matching one or more roles
   app.get('/api/user', function(req, res) {
     if (!req.session || !req.session.user) {
-        return res.send(401,JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
+      return res.send(401,JSON.stringify({ok:false, message: "You must be logged in to use this function"}));
     }
     if (!req.query.roles) { return res.send(400, JSON.stringify({ok:false, message: 'Roles are required!'})); }
     var keys = req.query.roles.split(',');
@@ -390,93 +395,93 @@ module.exports = function(config) {
     });
   });
 
-    function strip(value) {
-        return only(value, safeUserFields);
-    }
+  function strip(value) {
+    return only(value, safeUserFields);
+  }
 
-    function stripArray(array) {
-        var returnArray = [];
-        array.forEach(function(value) { returnArray.push(only(value, safeUserFields)); });
-        return returnArray;
-    }
+  function stripArray(array) {
+    var returnArray = [];
+    array.forEach(function(value) { returnArray.push(only(value, safeUserFields)); });
+    return returnArray;
+  }
 
-    function hasAdminPermission(user) {
+  function hasAdminPermission(user) {
         // If admin roles are disabled, then everyone has admin permissions
         if (!config.adminRoles) { return true; }
 
         if (user.roles) {
-            for (var i in user.roles) {
-                var role = user.roles[i];
-                if (config.adminRoles instanceof String) {
-                    if (config.adminRoles === role) { return true; }
-                }
-                else if (config.adminRoles instanceof Array) {
-                    if (config.adminRoles.indexOf(role) >= 0) { return true; }
-                }
-                else {
-                    console.log("config.adminRoles must be a String or Array.  Admin checks are disabled until this is fixed.");
-                    return true;
-                }
+          for (var i in user.roles) {
+            var role = user.roles[i];
+            if (config.adminRoles instanceof String) {
+              if (config.adminRoles === role) { return true; }
             }
+            else if (config.adminRoles instanceof Array) {
+              if (config.adminRoles.indexOf(role) >= 0) { return true; }
+            }
+            else {
+              console.log("config.adminRoles must be a String or Array.  Admin checks are disabled until this is fixed.");
+              return true;
+            }
+          }
         }
 
         return false;
-    }
+      }
 
-    function validateUserByEmail(email) {
+      function validateUserByEmail(email) {
         var user;
         // use email address to find user
         db.view('user', 'all', { key: email }, saveUserVerificationDetails);
 
         function saveUserVerificationDetails(err, body) {
-            if (err) { throw(err); }
+          if (err) { throw(err); }
 
-            if (body.rows && body.rows.length === 0) {
-                var error = new Error('No user found with the specified email address.');
-                error.status_code = 404;
-                throw(error);
-            }
+          if (body.rows && body.rows.length === 0) {
+            var error = new Error('No user found with the specified email address.');
+            error.status_code = 404;
+            throw(error);
+          }
 
-            user = body.rows[0].value;
+          user = body.rows[0].value;
             // TODO:  Add an expiration date for the verification code and check it.
             user.verification_code = uuid.v1();
             db.insert(user, user._id, verificationEmail);
-        }
+          }
 
         // initialize the emailTemplate engine
         function verificationEmail(err, body) {
-            if (err) { throw(err); }
-            emailTemplates(config.email.templateDir, renderVerificationTemplate);
+          if (err) { throw(err); }
+          emailTemplates(config.email.templateDir, renderVerificationTemplate);
         }
 
         // render verify template
         function renderVerificationTemplate(err, template) {
-            if (err) { throw(err); }
-            template('verify', { user: user, app: config.app }, sendVerificationEmail);
+          if (err) { throw(err); }
+          template('verify', { user: user, app: config.app }, sendVerificationEmail);
         }
 
         // send rendered template to user
         function sendVerificationEmail(err, html, text) {
-            if (err) { throw(err); }
-            if (!transport) {
-                var error = new Error('Mail transport is not configured!');
-                error.status_code = 500;
-                throw(error);
-            }
-            transport.sendMail({
-                from: config.email.from,
-                to: user.email,
-                subject: config.app.name + ': Please Verify Your Account',
-                html: html,
-                text: text }, done);
+          if (err) { throw(err); }
+          if (!transport) {
+            var error = new Error('Mail transport is not configured!');
+            error.status_code = 500;
+            throw(error);
+          }
+          transport.sendMail({
+            from: config.email.from,
+            to: user.email,
+            subject: config.app.name + ': Please Verify Your Account',
+            html: html,
+            text: text }, done);
         }
 
         // complete action
         function done(err, status) {
-            if (err) { throw(err); }
+          if (err) { throw(err); }
             //app.emit('user: verify account', user);
+          }
         }
-    }
 
-  return app;
-};
+        return app;
+      };
