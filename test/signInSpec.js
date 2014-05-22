@@ -148,36 +148,7 @@ describe('Sign in functions', function() {
     });
   });
 
-  describe('POST /api/user/signout', function() {
-    it('should log out a user successfully', function(done) {
-      function signOut (cookieToPass) {
-        request(app)
-          .post('/api/user/signout')
-          .set('Cookie', cookieToPass)
-          .end(function(e,r) {
-            parsedResText = JSON.parse(r.text);
-            expect(parsedResText).to.be.ok();
-            callTest()
-          })
-      }
-
-      function callTest (cookie) {
-        request(app) 
-          .get('/test')
-          .end(function(e,r) {
-            expect(sessionCapture.before).not.to.eql(sessionCapture.after);
-            done();
-          })
-      }
-
-      request(app)
-        .get('/setup')
-        .end(function(e,r) {
-          expect(sessionCapture.before.testData.test).to.eql(true);
-          signOut(r.headers['set-cookie'][0]);
-        });
-    });
-  });
+  
 
   // describe('GET /api/user/current (when logged in)', function() {
   //   it('should confirm user is logged in', function(done) {

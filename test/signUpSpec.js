@@ -8,7 +8,7 @@ var nano = require('nano')(couchUrl);
 var nock = require('nock');
 var request = require('supertest');
 
-nock.recorder.rec();
+//nock.recorder.rec();
 
 describe('User sign up', function() {
 
