@@ -4,7 +4,7 @@
   "description": "An express app module connected to couchdb _users table",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
