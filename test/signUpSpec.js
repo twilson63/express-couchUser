@@ -5,13 +5,13 @@ var user = require('../');
 var userView = require('../lib/user');
 var couchUrl = process.env.COUCH || 'http://localhost:5984';
 var nano = require('nano')(couchUrl);
-var nock = require('nock');
+
 var request = require('supertest');
 
 //nock.recorder.rec();
 
 describe('User sign up', function() {
-
+  var nock = require('nock');
   var couch = nock(couchUrl);
 
   var config = {

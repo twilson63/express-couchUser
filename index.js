@@ -131,7 +131,7 @@ module.exports = function(config) {
     var user;
     // use email address to find user
     db.view('user', 'all', { key: req.body.email }, saveUser);
-
+    
     // generate uuid code
     // and save user record
     function saveUser(err, body) {

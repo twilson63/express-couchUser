@@ -5,26 +5,16 @@ var user = require('../');
 var userView = require('../lib/user');
 var couchUrl = process.env.COUCH || 'http://localhost:5984';
 var nano = require('nano')(couchUrl);
-var nock = require('nock');
 var request = require('supertest');
 
 //nock.recorder.rec();
 
 describe('User sign out', function() {
-  var couch = nock(couchUrl);
   var config = {
     users: 'http://localhost:5984/_users',
     adminRoles: ['admin'],
     safeUserFields: 'name email roles desc',
     verify: true
-  };
-
-  var userDoc = {
-    name: 'foo',
-    password: 'password',
-    email: 'foo@email.com',
-    roles: ['school1'],
-    desc: 'foo'
   };
 
   var sessionCapture = {};
@@ -47,10 +37,6 @@ describe('User sign out', function() {
     });
   });
 
-  afterEach(function() {
-    nock.cleanAll();
-  });
-  
   describe('POST /api/user/signout', function() {
     it('should log out a user successfully', function(done) {
       function signOut (cookieToPass) {
