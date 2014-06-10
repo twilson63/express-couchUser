@@ -16,7 +16,23 @@ var only = require('only');
 module.exports = function(config) {
   var app = express();
   var safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles";
-  var db = nano(config.users);
+  
+  // Use nano auth if you pass in a user to authenticate with
+  if(config.couch_username && config.couch_password) {
+    var db = nano({
+      url: config.users,
+      request_defaults: {
+        auth: {
+          username: config.couch_username,
+          password: config.couch_password
+        },
+        strictSSL: false
+      }
+    });
+  } else {
+    var db = nano(config.users);
+  }
+
   var transport;  
   try {
     transport = nodemailer.createTransport(
