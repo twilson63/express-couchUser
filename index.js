@@ -1,7 +1,7 @@
 // # expressUserCouchDb
 //
-// This module is an express plugin module, which means you can 
-// require the module in your express app, and add it to your express 
+// This module is an express plugin module, which means you can
+// require the module in your express app, and add it to your express
 // application by using `app.use(user(config));`
 //
 var express = require('express');
@@ -16,27 +16,21 @@ var only = require('only');
 module.exports = function(config) {
   var app = express();
   var safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles";
-  
+
   // Use nano auth if you pass in a user to authenticate with
-  if(config.couch_username && config.couch_password) {
+  if(config.request_defaults) {
     var db = nano({
       url: config.users,
-      request_defaults: {
-        auth: {
-          username: config.couch_username,
-          password: config.couch_password
-        },
-        strictSSL: false
-      }
+      request_defaults: config.request_defaults
     });
   } else {
     var db = nano(config.users);
   }
 
-  var transport;  
+  var transport;
   try {
     transport = nodemailer.createTransport(
-      config.email.service, 
+      config.email.service,
       config.email[config.email.service]
     );
   } catch (err) {
@@ -48,7 +42,7 @@ module.exports = function(config) {
   // * password
   // * email
   //
-  // ### note: you can add more properties to 
+  // ### note: you can add more properties to
   // your user registration object
   app.post('/api/user/signup', function(req, res) {
     if (!req.body || !req.body.name || !req.body.password || !req.body.email) {
@@ -116,7 +110,7 @@ module.exports = function(config) {
               var error = err.error || 'unauthorized';
               res.send(statusCode, { ok: false, message: message, error: error });
             } else {
-              setSessionUser(); 
+              setSessionUser();
             }
           });
         } else {
@@ -124,7 +118,7 @@ module.exports = function(config) {
         }
       });
 }
-}); 
+});
 
   // logout user
   // required properties on req.body
@@ -147,7 +141,7 @@ module.exports = function(config) {
     var user;
     // use email address to find user
     db.view('user', 'all', { key: req.body.email }, saveUser);
-    
+
     // generate uuid code
     // and save user record
     function saveUser(err, body) {
@@ -392,7 +386,7 @@ app.get('/api/user/code/:code', function(req, res) {
     }
     req.body.type = 'user';
     db.insert(req.body, 'org.couchdb.user:' + req.body.name, function(err, data) {
-      if (err) { return res.send(err.status_code ? err.status_code : 500, err); } 
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
       res.send(200, JSON.stringify({ok: true, data: data}));
     });
   });
