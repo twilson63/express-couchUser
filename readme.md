@@ -44,6 +44,9 @@ validateUser: function(data, cb) {
   var req = data.req;     //all the fields in data is captured from /api/user/signin callback function
   var user = data.user;
   var headers = data.headers;
+  var outData = {         // This object will be attached to the session 
+    userInfo: "userAge"   // req.session.userInfo will be "userAge"
+  };
 
   if(data.user.failedLogin > MAX_FAILED_LOGIN) {
     //fails check
@@ -55,7 +58,7 @@ validateUser: function(data, cb) {
     cb(errorPayload);
   } else {
     //passess check
-    cb(null);
+    cb(null, outData);
   }
 }
 ```

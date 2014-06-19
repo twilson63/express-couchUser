@@ -96,21 +96,26 @@ module.exports = function(config) {
           return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
         }
 
-        function setSessionUser() {
+        function setSessionUser(data) {
           req.session.regenerate(function() {
             req.session.user = user;
+            if(data) {
+              _.each(data, function(val, key) {
+                req.session[key] = val;
+              });
+            }
             res.end(JSON.stringify({ok:true, user: strip(user)}));
           });
         }
         if(config.validateUser) {
-          config.validateUser({req: req, user: user, headers: headers}, function(err) {
+          config.validateUser({req: req, user: user, headers: headers}, function(err, data) {
             if(err) {
               var statusCode = err.statusCode || 401;
               var message = err.message || 'Invalid User Login';
               var error = err.error || 'unauthorized';
               res.send(statusCode, { ok: false, message: message, error: error });
             } else {
-              setSessionUser();
+              setSessionUser(data);
             }
           });
         } else {
