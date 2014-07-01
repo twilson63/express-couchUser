@@ -146,12 +146,12 @@ describe('Sign in functions', function() {
         })    
         
     });
-    it('should fail to login a user due to account status', function(done) {
+    it('should fail to login a user that is not enabled', function(done) {
       couch
         .post('/_session', "name=foo&password=password")
           .reply(200, {ok: true, name: 'foo'})
         .get('/_users/org.couchdb.user%3Afoo')
-          .reply(200, {name: 'foo', roles: ['basicUser'], status: 'archived' })
+          .reply(200, {name: 'foo', roles: ['basicUser'], enabled: false })
           
       request(app)
         .post('/api/user/signin')
