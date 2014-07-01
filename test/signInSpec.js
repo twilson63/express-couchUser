@@ -146,31 +146,21 @@ describe('Sign in functions', function() {
         })    
         
     });
+    it('should fail to login a user due to account status', function(done) {
+      couch
+        .post('/_session', "name=foo&password=password")
+          .reply(200, {ok: true, name: 'foo'})
+        .get('/_users/org.couchdb.user%3Afoo')
+          .reply(200, {name: 'foo', roles: ['basicUser'], status: 'archived' })
+          
+      request(app)
+        .post('/api/user/signin')
+        .send({name: 'foo', password: 'password'})
+        .end(function(e,r) {
+          expect(r.error).to.be.ok();
+          done();
+        }) 
+    });
   });
 
-  
-
-  // describe('GET /api/user/current (when logged in)', function() {
-  //   it('should confirm user is logged in', function(done) {
-  //     request.get('http://localhost:4000/api/user/current', {
-  //       jar: cookieJar
-  //     }, function(e, r, b) {
-  //       expect(r.statusCode).to.be(200);
-  //       expect(JSON.parse(b).user).not.to.be(undefined);
-  //       done();
-  //     });
-  //   });
-  // });
-
-  // describe('GET /api/user/current (when not logged in)', function() {
-  //   it('should return a sensible error', function(done) {
-  //     request.get('http://localhost:4000/api/user/current', {
-  //       jar: false
-  //     }, function(e, r, b) {
-  //       expect(r.statusCode).not.to.be(200);
-  //       expect(JSON.parse(b).user).to.be(undefined);
-  //       done();
-  //     });
-  //   });
-  // });
 });

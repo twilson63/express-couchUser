@@ -96,6 +96,10 @@ module.exports = function(config) {
           return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
         }
 
+        if(user.enabled === false) {
+          return res.send(403, JSON.stringify({ok: false, message: 'Your account has been archived.  Please contact an Administrator to reactivate your account.'}));
+        }
+
         function setSessionUser(data) {
           req.session.regenerate(function() {
             req.session.user = user;
@@ -157,6 +161,11 @@ module.exports = function(config) {
       }
 
       user = body.rows[0].value;
+
+      if(user.enabled === false) {
+        return res.send(403, JSON.stringify({ok: false, message: 'Your account is no longer enabled.  Please contact an Administrator to enable your account.'}));
+      }
+
       // generate uuid save to document
       user.code = uuid.v1();
       db.insert(user, user._id, createEmail);
