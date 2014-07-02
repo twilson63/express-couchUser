@@ -87,6 +87,7 @@ node ./node_modules/express-user-couchdb/init http://localhost:5984/_users
 ### POST /api/user/signup
 
 Create a new user account.  If config.verify is set, the user will be sent an email with a link to verify their account.
+If the user trying to login has enabled set to false, they will be notified to contact an admin to reactivate their account.
 
 ``` json
 {
@@ -122,6 +123,8 @@ The currently logged in user.  Returns a 401 error if the user is not currently 
 
 
 ### POST /api/user/forgot
+
+If the user trying to retrieve their password has enabled set to false, they will be notified to contact an admin to reactivate their account.
 
 ``` json
 {
