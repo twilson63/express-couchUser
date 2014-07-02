@@ -97,7 +97,7 @@ module.exports = function(config) {
         }
 
         if(user.enabled === false) {
-          return res.send(403, JSON.stringify({ok: false, message: 'Your account has been archived.  Please contact an Administrator to reactivate your account.'}));
+          return res.send(403, JSON.stringify({ok: false, message: 'Your account is no longer enabled.  Please contact an Administrator to enable your account.'}));
         }
 
         function setSessionUser(data) {
