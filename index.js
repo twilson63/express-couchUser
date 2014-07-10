@@ -9,22 +9,22 @@ var nano = require('nano');
 var uuid = require('uuid');
 var emailTemplates = require('email-templates');
 var nodemailer = require('nodemailer');
-var userView = require('./lib/user');
 var _ = require('underscore');
 var only = require('only');
 
 module.exports = function(config) {
-  var app = express();
-  var safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles";
+  var app = express(),
+    safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles",
+    db;
 
   // Use nano auth if you pass in a user to authenticate with
   if(config.request_defaults) {
-    var db = nano({
+    db = nano({
       url: config.users,
       request_defaults: config.request_defaults
     });
   } else {
-    var db = nano(config.users);
+    db = nano(config.users);
   }
 
   var transport;
@@ -133,9 +133,12 @@ module.exports = function(config) {
   // required properties on req.body
   // * name
   app.post('/api/user/signout', function(req, res) {
-    req.session.destroy();
-    //res.clearCookie('AuthSession');
-    res.send(200,JSON.stringify({ok: true, message: "You have successfully logged out."}));
+    req.session.destroy(function (err) {
+      if (err) {
+        console.log('Error destroying session during logout' + err);
+      }
+      res.send(200, JSON.stringify({ok: true, message: "You have successfully logged out."}));
+    });
   });
 
 
@@ -380,13 +383,22 @@ app.get('/api/user/code/:code', function(req, res) {
       db.destroy(user._id, user._rev, function(err,body) {
         if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
 
-              // Admins can delete their own accounts, but this will log them out.
-              if (req.session.user.name === req.params.name) {
-                req.session.destroy();
-                res.clearCookie('AuthSession');
-              }
-              return res.send(200,JSON.stringify({ok:true, message: "User " + req.params.name + " deleted."}));
-            });
+        function respondUserDeleted() {
+          res.send(200, JSON.stringify({ok: true, message: "User " + req.params.name + " deleted."}));
+        }
+        // Admins can delete their own accounts, but this will log them out.
+        if (req.session.user.name === req.params.name) {
+          req.session.destroy(function(err) {
+            if (err) {
+              console.log('Error destroying session for ' + req.params.name + ' ' + err);
+            }
+            respondUserDeleted();
+          });
+        } else {
+          respondUserDeleted();
+        }
+
+      });
     });
   });
 

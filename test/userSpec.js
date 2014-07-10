@@ -401,7 +401,8 @@ describe('User API Tests', function() {
             var obj = JSON.parse(r.text);
             expect(obj.ok).to.eql(true);
             expect(obj.message).to.eql('User adminUser deleted.');
-            callSessionAfter(r.headers['set-cookie'][0]); 
+            expect(r.headers['set-cookie']).to.not.be.ok();
+            callSessionAfter(cookie);
           });
       }
 
