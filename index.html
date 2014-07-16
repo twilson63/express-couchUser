@@ -1,0 +1,383 @@
+<!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen"/>
+  <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
+
+  <title>Express-couchuser</title>
+  <meta name="description" content="A express module for CouchDb based User Authentication Module">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1 class="title">Express-couchuser</h1>
+    </header>
+    <div id="container">
+      <p class="tagline">A express module for CouchDb based User Authentication Module</p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/twilson63/express-couchUser/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/twilson63/express-couchUser/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/twilson63/express-couchUser" class="code">View Express-couchuser on GitHub</a>
+        </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <h1>
+<a name="express-user-couchdb---expresscouchdb-module" class="anchor" href="#express-user-couchdb---expresscouchdb-module"><span class="octicon octicon-link"></span></a>express-user-couchdb - ExpressCouchDb Module</h1>
+
+<p><a href="http://travis-ci.org/twilson63/express-couchUser"><img src="https://secure.travis-ci.org/twilson63/express-couchUser.png" alt="Build Status"></a></p>
+
+<p>This module is a authentication lib built on top of couch's user model.</p>
+
+<h2>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>requirements</h2>
+
+<ul>
+<li>couchdb</li>
+<li>nodejs</li>
+</ul><h2>
+<a name="init-example" class="anchor" href="#init-example"><span class="octicon octicon-link"></span></a>init example</h2>
+
+<div class="highlight highlight-js"><pre><span class="kd">var</span> <span class="nx">couchUser</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express-couchUser'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+
+<span class="c1">// Required for session storage</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">cookieParser</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">session</span><span class="p">({</span> <span class="nx">secret</span><span class="o">:</span> <span class="s1">'Use something else here.'</span><span class="p">}));</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">configure</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">couchUser</span><span class="p">({</span>
+    <span class="nx">users</span><span class="o">:</span> <span class="s1">'http://localhost:5984/_users'</span><span class="p">,</span>
+    <span class="nx">email</span><span class="o">:</span> <span class="p">{</span>
+      <span class="p">...</span>
+    <span class="p">},</span>
+    <span class="nx">adminRoles</span><span class="o">:</span> <span class="p">[</span> <span class="s1">'admin'</span> <span class="p">],</span>
+    <span class="nx">validateUser</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{...}</span>
+  <span class="p">}));</span>
+<span class="p">});</span>
+
+</pre></div>
+
+<p>The optional adminRoles attribute allows you to specify one or more administrative roles that are allowed to add, update, and delete users.</p>
+
+<p>The optional validateUser allows you to specify extra validation other than username/password. For example, checking for greater than x number of login attempts. The first argument data is an object that has request, user, and headers fields. The reason the callback pattern is used to pass out the result is that you can do async calls within this function (like check another database, etc).</p>
+
+<p>Example validateUser function.</p>
+
+<div class="highlight highlight-js"><pre><span class="nx">validateUser</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">MAX_FAILED_LOGIN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">req</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">req</span><span class="p">;</span>     <span class="c1">//all the fields in data is captured from /api/user/signin callback function</span>
+  <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">user</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">headers</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">headers</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">outData</span> <span class="o">=</span> <span class="p">{</span>         <span class="c1">// This object will be attached to the session </span>
+    <span class="nx">userInfo</span><span class="o">:</span> <span class="s2">"userAge"</span>   <span class="c1">// req.session.userInfo will be "userAge"</span>
+  <span class="p">};</span>
+
+  <span class="k">if</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">failedLogin</span> <span class="o">&gt;</span> <span class="nx">MAX_FAILED_LOGIN</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">//fails check</span>
+    <span class="kd">var</span> <span class="nx">errorPayload</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">statusCode</span><span class="o">:</span> <span class="mi">403</span><span class="p">,</span>                           <span class="c1">//if not included will default to 401 </span>
+      <span class="nx">message</span><span class="o">:</span> <span class="s1">'Exceeded fail login attempts'</span><span class="p">,</span>   <span class="c1">//if not included will default to 'Invalid User Login'</span>
+      <span class="nx">error</span><span class="o">:</span> <span class="s1">'Forbidden'</span>                         <span class="c1">//if not included will default 'unauthorized'</span>
+    <span class="p">}</span>
+    <span class="nx">cb</span><span class="p">(</span><span class="nx">errorPayload</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">//passess check</span>
+    <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">outData</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="initialize-couchdb" class="anchor" href="#initialize-couchdb"><span class="octicon octicon-link"></span></a>Initialize CouchDb</h2>
+
+<p>Before you can use this module, you need to run a setup process to add the required views to the couchDb Users table, there is an <code>init.js</code> file that does this for you.  You can include it in your Gruntfile as a task.</p>
+
+<div class="highlight highlight-js"><pre><span class="nx">grunt</span><span class="p">.</span><span class="nx">registerTask</span><span class="p">(</span><span class="s1">'setup'</span><span class="p">,</span> <span class="s1">'setup database'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">userSetup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'./node_modules/express-user-couchdb/init'</span><span class="p">);</span>
+  <span class="nx">userSetup</span><span class="p">(</span><span class="s1">'http://localhost:5984/_users'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"configured express-user-couchdb module"</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</pre></div>
+
+<p>or you can invoke via command line</p>
+
+<div class="highlight highlight-sh"><pre>node ./node_modules/express-user-couchdb/init http://localhost:5984/_users
+</pre></div>
+
+<h2>
+<a name="api-commands" class="anchor" href="#api-commands"><span class="octicon octicon-link"></span></a>API Commands</h2>
+
+<h3>
+<a name="post-apiusersignup" class="anchor" href="#post-apiusersignup"><span class="octicon octicon-link"></span></a>POST /api/user/signup</h3>
+
+<p>Create a new user account.  If config.verify is set, the user will be sent an email with a link to verify their account.
+If the user trying to login has enabled set to false, they will be notified to contact an admin to reactivate their account.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+  <span class="nt">"password"</span><span class="p">:</span> <span class="s2">"password"</span><span class="p">,</span>
+  <span class="nt">"email"</span><span class="p">:</span> <span class="s2">"user@email.com"</span><span class="p">,</span>
+  <span class="nt">"data"</span><span class="p">:</span> <span class="p">{}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="post-apiusersignin" class="anchor" href="#post-apiusersignin"><span class="octicon octicon-link"></span></a>POST /api/user/signin</h3>
+
+<p>Allow a user to log in.  If config.verify is set, then the user is required to validate their email address before logging in.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+  <span class="nt">"password"</span><span class="p">:</span> <span class="s2">"password"</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="post-apiusersignout" class="anchor" href="#post-apiusersignout"><span class="octicon octicon-link"></span></a>POST /api/user/signout</h3>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"user"</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="get-apiusercurrent" class="anchor" href="#get-apiusercurrent"><span class="octicon octicon-link"></span></a>GET /api/user/current</h3>
+
+<p>The currently logged in user.  Returns a 401 error if the user is not currently logged in.</p>
+
+<h3>
+<a name="post-apiuserforgot" class="anchor" href="#post-apiuserforgot"><span class="octicon octicon-link"></span></a>POST /api/user/forgot</h3>
+
+<p>If the user trying to retrieve their password has enabled set to false, they will be notified to contact an admin to reactivate their account.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"email"</span><span class="p">:</span> <span class="s2">"user@email.com"</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="post-apiuserverifyemail" class="anchor" href="#post-apiuserverifyemail"><span class="octicon octicon-link"></span></a>POST /api/user/verify:email</h3>
+
+<p>Send an email to a user that includes a verification code and link to verify their account.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"email"</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="post-apiuserverifycode" class="anchor" href="#post-apiuserverifycode"><span class="octicon octicon-link"></span></a>POST /api/user/verify/:code</h3>
+
+<p>Confirm that a user's email address is valid using a previously generated verification code.</p>
+
+<h3>
+<a name="post-apiuserreset" class="anchor" href="#post-apiuserreset"><span class="octicon octicon-link"></span></a>POST /api/user/reset</h3>
+
+<p>Reset a user's password (requires the code generated using /api/user/forgot).</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+  <span class="nt">"code"</span><span class="p">:</span> <span class="s2">"code"</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="get-apiuserrolesfoobar" class="anchor" href="#get-apiuserrolesfoobar"><span class="octicon octicon-link"></span></a>GET /api/user?roles=foo,bar</h3>
+
+<p>Return a list of users matching the specified roles.</p>
+
+<p>[{ user... }, { user2... }]</p>
+
+<h3>
+<a name="post-apiuser" class="anchor" href="#post-apiuser"><span class="octicon octicon-link"></span></a>POST /api/user</h3>
+
+<p>Create a new user.  If config.adminRoles is set, the user making this call must have one of the specified roles.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"user1"</span><span class="p">,</span>
+  <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+  <span class="nt">"password"</span><span class="p">:</span> <span class="s2">"foo"</span><span class="p">,</span>
+  <span class="nt">"roles"</span><span class="p">:</span> <span class="p">[</span><span class="err">'admin'</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="get-apiusername" class="anchor" href="#get-apiusername"><span class="octicon octicon-link"></span></a>GET /api/user/:name</h3>
+
+<p>Returns the user whose name matches :name.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"_id"</span><span class="p">:</span> <span class="s2">"org.couchdb.user:user1"</span><span class="p">,</span>
+  <span class="nt">"_rev"</span><span class="p">:</span> <span class="s2">"1-123456"</span><span class="p">,</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"user1"</span><span class="p">,</span>
+  <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+  <span class="nt">"password"</span><span class="p">:</span> <span class="s2">"foo"</span><span class="p">,</span>
+  <span class="nt">"roles"</span><span class="p">:</span> <span class="p">[</span><span class="err">'admin'</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="put-apiusername" class="anchor" href="#put-apiusername"><span class="octicon octicon-link"></span></a>PUT /api/user/:name</h3>
+
+<p>Updates the user specified by :name.  If config.adminRoles is set, then a user must have an admin role to be able to update anyone else's record.  Non-admins cannot update their own role information.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"_id"</span><span class="p">:</span> <span class="s2">"org.couchdb.user:user1"</span><span class="p">,</span>
+  <span class="nt">"_rev"</span><span class="p">:</span> <span class="s2">"1-123456"</span><span class="p">,</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"user1"</span><span class="p">,</span>
+  <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+  <span class="nt">"password"</span><span class="p">:</span> <span class="s2">"foo"</span><span class="p">,</span>
+  <span class="nt">"roles"</span><span class="p">:</span> <span class="p">[</span><span class="err">'admin'</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>
+<a name="delete-apiusername" class="anchor" href="#delete-apiusername"><span class="octicon octicon-link"></span></a>DELETE /api/user/:name</h3>
+
+<p>Removes the specified user.  If config.adminRoles is set, then a user must have an admin role to be able to delete a user.</p>
+
+<div class="highlight highlight-json"><pre><span class="p">{</span>
+  <span class="nt">"_id"</span><span class="p">:</span> <span class="s2">"org.couchdb.user:user1"</span><span class="p">,</span>
+  <span class="nt">"_rev"</span><span class="p">:</span> <span class="s2">"1-123456"</span><span class="p">,</span>
+  <span class="nt">"name"</span><span class="p">:</span> <span class="s2">"user1"</span><span class="p">,</span>
+  <span class="nt">"type"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+  <span class="nt">"password"</span><span class="p">:</span> <span class="s2">"foo"</span><span class="p">,</span>
+  <span class="nt">"roles"</span><span class="p">:</span> <span class="p">[</span><span class="err">'admin'</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<div class="highlight highlight-js"><pre><span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'express-user-couchdb'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span> 
+  <span class="nx">users</span><span class="o">:</span> <span class="s1">'http://localhost:5984/_users'</span><span class="p">,</span> 
+  <span class="nx">email</span> <span class="p">....</span>
+<span class="p">};</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">config</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// handle other requests first</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">router</span><span class="p">);</span>
+  <span class="c1">// handle core requests</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">user</span><span class="p">(</span><span class="nx">config</span><span class="p">));</span>
+<span class="p">});</span>
+</pre></div>
+
+<div class="highlight highlight-json"><pre><span class="err">node</span> <span class="err">init.js</span> <span class="p">[</span><span class="err">couchdb</span> <span class="err">users</span> <span class="err">db</span><span class="p">]</span>
+</pre></div>
+
+<h2>
+<a name="setting-up-email-templates" class="anchor" href="#setting-up-email-templates"><span class="octicon octicon-link"></span></a>setting up email templates</h2>
+
+<p>express-user-couchdb has the capability to attach to an smtp server and send emails for certain user events.  And you have the ability to manipulate the e-mail templates.  </p>
+
+<p>express-user-couchdb uses the nodemailer and email-templates modules to perform the email process, but you need to pass in the config settings in the config argument of the module:</p>
+
+<p>Here is an example of the config settings:</p>
+
+<div class="highlight highlight-js"><pre><span class="p">{</span>
+  <span class="nx">couch</span><span class="o">:</span> <span class="s1">'http://localhost:5984/_users'</span><span class="p">,</span>
+  <span class="nx">email</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">service</span><span class="o">:</span> <span class="s1">'SMTP'</span><span class="p">,</span>
+    <span class="nx">SMTP</span><span class="o">:</span> <span class="p">{</span>
+      <span class="p">....</span>
+    <span class="p">},</span>
+    <span class="nx">templateDir</span><span class="o">:</span> <span class="p">....</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>to setup the forgot password email template you need to create a folder called <code>forgot</code> in the email template directory, then in that folder you need to create a style.css, html.ejs, and text.ejs.  These files will be used to build your email template.  Here is an example of the text.ejs</p>
+
+<h3>
+<a name="forgot-password" class="anchor" href="#forgot-password"><span class="octicon octicon-link"></span></a>Forgot Password</h3>
+
+<div class="highlight highlight-html"><pre>Foo App
+#######
+
+We are sorry you forgot your password, in order to reset your password,  we need you to click the link below.
+
+Copy Link:
+
+http://fooapp.com/account/reset?code=<span class="err">&lt;</span>%= user.code %&gt;
+
+and paste into your browsers url.
+
+Thank you for supporting our application, please let us know if you have any questions or concerns.
+
+Thanks
+
+The Team
+</pre></div>
+
+<h3>
+<a name="confirm-e-mail" class="anchor" href="#confirm-e-mail"><span class="octicon octicon-link"></span></a>confirm e-mail</h3>
+
+<p>If you plan to enable the users to register, you may want to send a confirmation email to them when they sign up.</p>
+
+<p>You would follow the same steps above, but instead of creating a forgot folder, you would need to create a confirm folder and place your css, html.ejs, and text.ejs files.</p>
+
+<h2>
+<a name="contribution" class="anchor" href="#contribution"><span class="octicon octicon-link"></span></a>Contribution</h2>
+
+<p>Pull requests are welcome.</p>
+
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>MIT</p>
+
+<h2>
+<a name="support" class="anchor" href="#support"><span class="octicon octicon-link"></span></a>Support</h2>
+
+<p>Please add issues to the github repo.</p>
+
+<h2>
+<a name="thanks" class="anchor" href="#thanks"><span class="octicon octicon-link"></span></a>Thanks</h2>
+
+<ul>
+<li>CouchDb Team</li>
+<li>NodeJS Team</li>
+<li>NodeMailier</li>
+<li>Nano Team</li>
+<li>Email-Templates</li>
+</ul>
+        </article>
+      </div>
+    </div>
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/twilson63" class="avatar"><img src="https://avatars3.githubusercontent.com/u/21292?s=60" width="48" height="48"/></a> <a href="https://github.com/twilson63">twilson63</a> maintains <a href="https://github.com/twilson63/express-couchUser">Express-couchuser</a></p>
+
+
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="http://pages.github.com/">GitHub Pages</a><br/>theme by <a href="https://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/twilson63/express-couchUser/tarball/master" class="tar">tar</a><a href="https://github.com/twilson63/express-couchUser/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
+  </div>
+
+  
+</body>
+</html>
