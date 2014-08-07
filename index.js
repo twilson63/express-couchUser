@@ -88,6 +88,9 @@ module.exports = function(config) {
 
     function genSession(err, body, headers) {
       if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+      // Makes sure couch server admins are not able to login.  
+      // They are shown the same error a regular user would see if they incorrectly inputted their username/password
+      if(body.name === null) { return res.send(500, JSON.stringify({ok: false, title: 'Login Error', message: 'Name or password is incorrect'})); }
       db.get('org.couchdb.user:' + body.name, function(err, user) {
 
         if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
