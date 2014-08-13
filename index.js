@@ -17,15 +17,15 @@ module.exports = function(config) {
     safeUserFields = config.safeUserFields ? config.safeUserFields : "name email roles",
     db;
 
-  // Use nano auth if you pass in a user to authenticate with
-  if(config.request_defaults) {
-    db = nano({
+  function configureNano(cookie) {
+    return nano({
       url: config.users,
-      request_defaults: config.request_defaults
+      request_defaults: config.request_defaults,
+      cookie: cookie
     });
-  } else {
-    db = nano(config.users);
   }
+
+  db = configureNano();
 
   var transport;
   try {
@@ -35,6 +35,12 @@ module.exports = function(config) {
     );
   } catch (err) {
     console.log('*** Email Service is not configured ***');
+  }
+
+  if (!config.validateUser) {
+    config.validateUser = function(input, cb) {
+      cb();
+    };
   }
 
   // required properties on req.body
@@ -80,56 +86,87 @@ module.exports = function(config) {
   // * name
   // * password
   app.post('/api/user/signin', function(req, res) {
+
     if (!req.body || !req.body.name || !req.body.password) {
       return res.send(400, JSON.stringify({ok: false, message: 'A name, and password are required.'}));
     }
 
-    db.auth(req.body.name, req.body.password, genSession);
+    db.auth(req.body.name, req.body.password, populateSessionWithUser(function(err, user) {
+      if (err) {
+        return res.send(err.statusCode ? err.statusCode : 500, {ok: false, message: err.message, error: err.error});
+      }
 
-    function genSession(err, body, headers) {
-      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
-      // Makes sure couch server admins are not able to login.  
-      // They are shown the same error a regular user would see if they incorrectly inputted their username/password
-      if(body.name === null) { return res.send(500, JSON.stringify({ok: false, title: 'Login Error', message: 'Name or password is incorrect'})); }
-      db.get('org.couchdb.user:' + body.name, function(err, user) {
+      res.end(JSON.stringify({ok:true, user: strip(user)}));
+    }));
 
-        if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+    function populateSessionWithUser(cb) {
+      return function(err, body, headers) {
+        if (err) { return cb(err); }
 
-        if (config.verify && !user.verified) {
-          return res.send(401, JSON.stringify({ ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'}));
-        }
+        getUserName(body.name, headers['set-cookie'], function(err, name) {
+          if (err) { return cb(err); }
 
-        if(user.enabled === false) {
-          return res.send(403, JSON.stringify({ok: false, message: 'Your account is no longer enabled.  Please contact an Administrator to enable your account.'}));
-        }
+          lookupUser(name, function(err, user) {
+            if(err) { return cb(err); }
 
-        function setSessionUser(data) {
-          req.session.regenerate(function() {
-            req.session.user = user;
-            if(data) {
-              _.each(data, function(val, key) {
-                req.session[key] = val;
+            if (config.verify && !user.verified) {
+              return cb({statusCode: 401, ok: false, message: 'You must verify your account before you can log in.  Please check your email (including spam folder) for more details.'});
+            }
+
+            if(user.enabled === false) {
+              return cb({statusCode: 403, ok: false, message: 'Your account is no longer enabled.  Please contact an Administrator to enable your account.'});
+            }
+
+            config.validateUser({req: req, user: user, headers: headers}, function(err, data) {
+              if(err) {
+                err.statusCode = err.statusCode || 401;
+                err.message = err.message || 'Invalid User Login';
+                err.error = err.error || 'unauthorized';
+                return cb(err);
+              }
+
+              createSession(user, data, function(){
+                cb(null, user);
               });
-            }
-            res.end(JSON.stringify({ok:true, user: strip(user)}));
+
+            });
+
+          });
+        });
+
+      }
+    }
+
+    function getUserName(name, authCookie, cb) {
+      if (name) {
+        cb(null, name);
+      } else {
+        /**
+         * Work around for issue:  https://issues.apache.org/jira/browse/COUCHDB-1356
+         * Must fetch the session after authentication in order to find username of server admin that logged in
+         */
+        configureNano(authCookie).session(function(err, session) {
+          cb(err, session.userCtx.name);
+        });
+      }
+    }
+
+    function lookupUser(name, cb) {
+      db.get('org.couchdb.user:' + name, cb);
+    }
+
+    function createSession(user, data, cb) {
+      req.session.regenerate(function() {
+        req.session.user = user;
+        if(data) {
+          _.each(data, function(val, key) {
+            req.session[key] = val;
           });
         }
-        if(config.validateUser) {
-          config.validateUser({req: req, user: user, headers: headers}, function(err, data) {
-            if(err) {
-              var statusCode = err.statusCode || 401;
-              var message = err.message || 'Invalid User Login';
-              var error = err.error || 'unauthorized';
-              res.send(statusCode, { ok: false, message: message, error: error });
-            } else {
-              setSessionUser(data);
-            }
-          });
-        } else {
-          setSessionUser();
-        }
+        cb();
       });
-}
+    }
+
 });
 
   // logout user
