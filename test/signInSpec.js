@@ -53,6 +53,7 @@ describe('Sign in functions', function() {
   });
 
   describe('POST /api/user/signin', function() {
+
     it('should authenticate user successfully', function(done) {
 
       function signIn (cookie) {
@@ -83,7 +84,8 @@ describe('Sign in functions', function() {
         .post('/_session', "name=foo&password=password")
           .reply(200, {ok: true, name: 'foo'})
         .get('/_users/org.couchdb.user%3Afoo')
-          .reply(200, {name: 'foo', roles: ['basicUser'], verified: 'true' })
+          .reply(200, {name: 'foo', roles: ['basicUser'], verified: 'true' });
+
       request(app) 
         .get('/setup')
         .end(function(e, r) {
@@ -92,6 +94,7 @@ describe('Sign in functions', function() {
         });
 
     });
+
     it('should fail to authenticate the user', function() {
       request(app)
         .post('/api/user/signin')
@@ -103,10 +106,11 @@ describe('Sign in functions', function() {
           expect(obj.message).to.eql("A name, and password are required.");
         });
     });
+
     it('should fail to generate a new session', function() {
       couch
         .post('/_session', "name=foo&password=password")
-          .reply(500)
+          .reply(500);
       request(app)
         .post('/api/user/signin')
         .send({name: 'foo', password: 'password'})
@@ -114,13 +118,14 @@ describe('Sign in functions', function() {
           expect(r.error).to.be.ok();
         });
     });
+
     //async problems in this test, it sometimes works as intended
     it('should fail to authenticate a user that does not exist', function(done) {
       couch
         .post('/_session', "name=faker&password=faker")
           .reply(200, {ok: true, name: 'faker'})
         .get('/_users/org.couchdb.user%3Afaker')
-          .reply(500)
+          .reply(500);
       request(app)
         .post('/api/user/signin')
         .send({name: 'faker', password: 'faker'})
@@ -135,7 +140,7 @@ describe('Sign in functions', function() {
         .post('/_session', "name=foo&password=password")
           .reply(200, {ok: true, name: 'foo'})
         .get('/_users/org.couchdb.user%3Afoo')
-          .reply(200, {name: 'foo', roles: ['basicUser'] })
+          .reply(200, {name: 'foo', roles: ['basicUser'] });
           
       request(app)
         .post('/api/user/signin')
@@ -146,12 +151,13 @@ describe('Sign in functions', function() {
         })    
         
     });
+
     it('should fail to login a user that is not enabled', function(done) {
       couch
         .post('/_session', "name=foo&password=password")
           .reply(200, {ok: true, name: 'foo'})
         .get('/_users/org.couchdb.user%3Afoo')
-          .reply(200, {name: 'foo', roles: ['basicUser'], enabled: false })
+          .reply(200, {name: 'foo', roles: ['basicUser'], enabled: false });
           
       request(app)
         .post('/api/user/signin')
@@ -161,6 +167,31 @@ describe('Sign in functions', function() {
           done();
         }) 
     });
+
+    it('should login an admin user that has no name returned during authentication', function(done) {
+      var cookie = 'AuthSession=1234567890';
+
+      couch
+        .post('/_session', "name=foo&password=password")
+        .reply(200, {ok: true, name: null}, {'set-cookie': cookie})
+        .get('/_session')
+        .matchHeader('cookie', cookie)
+        .reply(200, {ok: true, userCtx: { name: 'foo'}})
+        .get('/_users/org.couchdb.user%3Afoo')
+        .reply(200, {name: 'foo', roles: ['basicUser'], verified: 'true' });
+
+      request(app)
+        .post('/api/user/signin')
+        .send({name: 'foo', password: 'password'})
+        .end(function(e, r, b) {
+          expect(e).not.to.be.ok();
+          expect(200);
+          var obj = JSON.parse(r.text);
+          expect(obj).to.eql({"ok":true,"user":{"name":"foo","roles":["basicUser"]}});
+          done();
+        })
+    });
+
   });
 
 });

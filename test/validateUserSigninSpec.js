@@ -19,7 +19,7 @@ describe('login with validateUser test', function() {
           statusCode: 403,
           message: 'Exceeded fail login attempts', 
           error: 'Forbidden'
-        }
+        };
         cb(errorPayload);
       } else {
         cb(null);
@@ -56,8 +56,8 @@ describe('login with validateUser test', function() {
 
     var getResponse = {
       name: 'foo',
-      failedLogin: 6,
-    }
+      failedLogin: 6
+    };
 
     nock('http://localhost:5984')
       .get('/_user/org.couchdb.user%3Afoo')
@@ -87,8 +87,8 @@ describe('login with validateUser test', function() {
 
     var getResponse = {
       name: 'foo',
-      failedLogin: 4,
-    }
+      failedLogin: 4
+    };
 
     nock('http://localhost:5984')
       .get('/_user/org.couchdb.user%3Afoo')
