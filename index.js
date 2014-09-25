@@ -53,7 +53,14 @@ module.exports = function(config) {
 
     req.body.type = 'user';
 
-    db.insert(req.body, 'org.couchdb.user:' + req.body.name, done);
+    // Check to see whether a user with the same email address already exists.  Throw an error if it does.
+    db.view('user', 'all', { key: req.body.email }, function(err, body) {
+      if (err) { return res.send(err.status_code ? err.status_code : 500, err); }
+      if (body.rows && body.rows.length > 0) { return res.send(400, {ok: false, message: "A user with this email address already exists.  Try resetting your password instead."})};
+
+      // We can now safely create the user.
+      db.insert(req.body, 'org.couchdb.user:' + req.body.name, done);
+    });
 
     function done(err, body) {
       if (err) { return res.send(err.status_code, err); }
