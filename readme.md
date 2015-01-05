@@ -20,9 +20,17 @@ var app = express();
 app.use(express.cookieParser());
 app.use(express.session({ secret: 'Use something else here.'}));
 
+// The request_defaults node is required if you have turned the Admin Party off
+
 app.configure(function() {
   app.use(couchUser({
     users: 'http://localhost:5984/_users',
+    request_defaults: {
+      auth: {
+        user: 'couchAdminUserName',
+        pass: 'couchAdminPassword'
+      }
+    },
     email: {
       ...
     },
