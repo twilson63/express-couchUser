@@ -24,22 +24,20 @@ app.use(session({ secret: 'Use something else here.'}));
 
 // The request_defaults node is required if you have turned the Admin Party off
 
-app.configure(function() {
-  app.use(couchUser({
-    users: 'http://localhost:5984/_users',
-    request_defaults: {
-      auth: {
-        user: 'couchAdminUserName',
-        pass: 'couchAdminPassword'
-      }
-    },
-    email: {
-      ...
-    },
-    adminRoles: [ 'admin' ],
-    validateUser: function(data, cb) {...}
-  }));
-});
+app.use(couchUser({
+  users: 'http://localhost:5984/_users',
+  request_defaults: {
+    auth: {
+      user: 'couchAdminUserName',
+      pass: 'couchAdminPassword'
+    }
+  },
+  email: {
+  ...
+  },
+  adminRoles: [ 'admin' ],
+  validateUser: function(data, cb) {...}
+}));
 
 ```
 The optional adminRoles attribute allows you to specify one or more administrative roles that are allowed to add, update, and delete users.
