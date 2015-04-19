@@ -14,11 +14,13 @@ This module is a authentication lib built on top of couch's user model.
 ``` js
 var couchUser = require('express-couchUser');
 var express = require('express');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
 var app = express();
 
 // Required for session storage
-app.use(express.cookieParser());
-app.use(express.session({ secret: 'Use something else here.'}));
+app.use(cookieParser());
+app.use(session({ secret: 'Use something else here.'}));
 
 // The request_defaults node is required if you have turned the Admin Party off
 
