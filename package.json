@@ -1,6 +1,6 @@
 {
   "name": "express-user-couchdb",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "An express app module connected to couchdb _users table",
   "main": "index.js",
   "scripts": {
