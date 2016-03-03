@@ -12,7 +12,7 @@ This module is a authentication lib built on top of couch's user model.
 ## init example
 
 ``` js
-var couchUser = require('express-couchUser');
+var couchUser = require('express-user-couchdb');
 var express = require('express');
 var app = express();
 
