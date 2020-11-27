@@ -14,30 +14,30 @@ This module is a authentication lib built on top of couch's user model.
 ``` js
 var couchUser = require('express-user-couchdb');
 var express = require('express');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
 var app = express();
 
 // Required for session storage
-app.use(express.cookieParser());
-app.use(express.session({ secret: 'Use something else here.'}));
+app.use(cookieParser());
+app.use(session({ secret: 'Use something else here.'}));
 
 // The request_defaults node is required if you have turned the Admin Party off
 
-app.configure(function() {
-  app.use(couchUser({
-    users: 'http://localhost:5984/_users',
-    request_defaults: {
-      auth: {
-        user: 'couchAdminUserName',
-        pass: 'couchAdminPassword'
-      }
-    },
-    email: {
-      ...
-    },
-    adminRoles: [ 'admin' ],
-    validateUser: function(data, cb) {...}
-  }));
-});
+app.use(couchUser({
+  users: 'http://localhost:5984/_users',
+  request_defaults: {
+    auth: {
+      user: 'couchAdminUserName',
+      pass: 'couchAdminPassword'
+    }
+  },
+  email: {
+  ...
+  },
+  adminRoles: [ 'admin' ],
+  validateUser: function(data, cb) {...}
+}));
 
 ```
 The optional adminRoles attribute allows you to specify one or more administrative roles that are allowed to add, update, and delete users.
